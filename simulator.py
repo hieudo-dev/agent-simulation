@@ -1,4 +1,5 @@
-from pyswip import Prolog
+import child
+import robot
 
 class Simulator:
 	env = [[]]
@@ -10,7 +11,7 @@ class Simulator:
 	def changeEnviroment(self):
 		# TODO: generar nuevo ambiente
 		pass
-		
+
 	def simulate(self, n):
 		for _ in range(n):
 			# TODO: realizar simulacion
