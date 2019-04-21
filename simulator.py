@@ -4,9 +4,9 @@ import robot
 class Simulator:
 	env = [[]]
 
-	def __init__(self, N, M, dirtPercent, childCount, t):
+	def __init__(self, N, M, dirtPercent, obstPercent, childCount, t):
 		self.board = [["" * M] for _ in range(N)]
-		# TODO: generar ambiente incial
+		
 
 	def changeEnviroment(self):
 		# TODO: generar nuevo ambiente
