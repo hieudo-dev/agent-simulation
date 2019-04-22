@@ -47,7 +47,6 @@ class Simulator:
 		self.env = [["" for _ in range(M)] for _ in range(N)]
 		self.changeEnviroment(dirtPercent, childCount)
 
-
 	def changeEnviroment(self, dirtPercent, childCount):
 		# TODO: generar nuevo ambiente
 		self.env[0][3] = self.env[0][4] = self.env[1][4] = self.env[1][3] = 'C'
