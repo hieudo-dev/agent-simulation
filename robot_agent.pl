@@ -60,7 +60,7 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	get_direction(Path, Move),
 	!.
 
-% 		Not carrying a child, enviroment is very dirty, standing on dirt: Clean the dirt
+% 		Not carrying a child, enviroment is very dirty, found dirt: Clean the dirt
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [clean]):-
 	Carrying = false,
 	is_very_dirty(Dirts, Childs, Obstacles, N, M),
@@ -69,7 +69,7 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [clean]):-
 
 
 % 	Child:
-%		Caryying a child, enviroment isnt very dirty: Move towards closest corral to drop child (1 Step)
+%		Carrying a child, enviroment isnt very dirty: Move towards closest corral to drop child (1 Step)
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
@@ -79,7 +79,7 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
 	get_direction([S, T|PathTail], Move),
 	!.
 
-%		Caryying a child, enviroment isnt very dirty: Move towards closest corral to drop child (2 Step)
+%		Carrying a child, enviroment isnt very dirty: Move towards closest corral to drop child (2 Step)
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Move2]):-
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
@@ -89,16 +89,23 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Mov
 	get_direction([T, Y|PathTail], Move2),
 	!.
 
-% 		Carrying a child, standing at corral: Drop child
+% 		Carrying a child, found a corral: Drop child
 next_move((X, Y), _, _, Carrying, _, _, _, Corrals, [drop]):-
 	Carrying = true,
 	member((X, Y), Corrals),
 	!.
 
-% 		Not carrying a child, enviroment isnt very dirty: Move towards closest child to carry
+% 		Not carrying a child, enviroment isn't very dirty: Move towards closest child to carry
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	Carrying = false,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	bfs([[(X, Y)]], N, M, Obstacles, Childs, Path),
 	get_direction(Path, Move),
+	!.
+
+
+%		Carrying a child, enviroment is very dirty: Drop child
+next_move(_, N, M, Carrying, Dirts, Childs, Obstacles, _, [drop]):-
+	Carrying = true,
+	is_very_dirty(Dirts, Childs, Obstacles, N, M),
 	!.
