@@ -84,9 +84,9 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Mov
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	append(Obstacles, Childs, RobotObstacles),
-	bfs([[(X, Y)]], N, M, RobotObstacles, Corrals, [S, T, Y|PathTail]),
-	get_direction([S, T, Y|PathTail], Move1),
-	get_direction([T, Y|PathTail], Move2),
+	bfs([[(X, Y)]], N, M, RobotObstacles, Corrals, [S, T, R|PathTail]),
+	get_direction([S, T, R|PathTail], Move1),
+	get_direction([T, R|PathTail], Move2),
 	!.
 
 % 		Carrying a child, found a corral: Drop child
