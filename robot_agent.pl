@@ -4,10 +4,10 @@ adjacent(X, Y, X1, Y):- X1 is X-1.
 adjacent(X, Y, X, Y1):- Y1 is Y+1.
 adjacent(X, Y, X, Y1):- Y1 is Y-1.
 
-get_direction([(X, Y), (X+1, Y) |_], down).
-get_direction([(X, Y), (X-1, Y) |_], up).
-get_direction([(X, Y), (X, Y-1) |_], left).
-get_direction([(X, Y), (X, Y+1) |_], right).
+get_direction([(X, Y), (X1, Y) |_], down):-X1 is X+1.
+get_direction([(X, Y), (X1, Y) |_], up):- X1 is X-1.
+get_direction([(X, Y), (X, Y1) |_], left):- Y1 is Y-1.
+get_direction([(X, Y), (X, Y1) |_], right):- Y1 is Y+1.
 
 is_dirt(X, Y, Dirtlist):- member((X, Y), Dirtlist).
 inside_enviroment(X, Y, N, M):-
@@ -55,7 +55,7 @@ bfs(PathsQueue, N, M, Obstacles, GoalsList, Solution):-
 % 		Not carrying a child, enviroment is very dirty: Find dirt to clean
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	Carrying = false,
-	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
+	is_very_dirty(Dirts, Childs, Obstacles, N, M),
 	bfs([[(X, Y)]], N, M, Obstacles, Childs, Path),
 	get_direction(Path, Move),
 	!.
