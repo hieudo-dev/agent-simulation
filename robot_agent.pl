@@ -51,16 +51,13 @@ bfs(PathsQueue, N, M, Obstacles, GoalsList, Solution):-
 
 % Robot Agent:
 
+should_drop(Corrals, Position, [drop]):-member(Position, Corrals).
+should_drop(Corrals, Position, []):-not(member(Position, Corrals)).
+
 %		Carrying a child, enviroment is very dirty: Drop child
 next_move(_, N, M, Carrying, Dirts, Childs, Obstacles, _, [drop]):-
 	Carrying = true,
 	is_very_dirty(Dirts, Childs, Obstacles, N, M),
-	!.
-
-% 		Carrying a child, found a corral: Drop child
-next_move((X, Y), _, _, Carrying, _, _, _, Corrals, [drop]):-
-	Carrying = true,
-	member((X, Y), Corrals),
 	!.
 
 % 		Not carrying a child, enviroment is very dirty, found dirt: Clean the dirt
@@ -80,29 +77,33 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	!.
 
 %		Carrying a child, enviroment isnt very dirty: Move towards closest corral to drop child (1 Step)
-next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
+next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move, drop]):-
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	append(Obstacles, Childs, RobotObstacles),
-	bfs([[(X, Y)]], N, M, RobotObstacles, Corrals, [S, T|PathTail]),
+	subtract(Corrals, Childs, EmptyCorrals),
+	bfs([[(X, Y)]], N, M, RobotObstacles, EmptyCorrals, [S, T|PathTail]),
 	member(T, Corrals),
 	get_direction([S, T|PathTail], Move),
 	!.
 
 %		Carrying a child, enviroment isnt very dirty: Move towards closest corral to drop child (2 Step)
-next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Move2]):-
+next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Move2| Drop]):-
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	append(Obstacles, Childs, RobotObstacles),
-	bfs([[(X, Y)]], N, M, RobotObstacles, Corrals, [S, T, R|PathTail]),
+	subtract(Corrals, Childs, EmptyCorrals),
+	bfs([[(X, Y)]], N, M, RobotObstacles, EmptyCorrals, [S, T, R|PathTail]),
 	get_direction([S, T, R|PathTail], Move1),
 	get_direction([T, R|PathTail], Move2),
+	should_drop(Corrals, R, Drop),
 	!.
 
 % 		Not carrying a child, enviroment isn't very dirty: Move towards closest child to carry
-next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
+next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
 	Carrying = false,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
-	bfs([[(X, Y)]], N, M, Obstacles, Childs, Path),
+	subtract(Childs, Corrals, FreeChilds),
+	bfs([[(X, Y)]], N, M, Obstacles, FreeChilds, Path),
 	get_direction(Path, Move),
 	!.
