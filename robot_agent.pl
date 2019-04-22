@@ -15,7 +15,7 @@ inside_enviroment(X, Y, N, M):-
 	Y>=0,Y<M.
 
 % temporary almost dirty definition
-is_very_dirty(Dirts, Childs, Obstacles, N, M):- 
+is_very_dirty(Dirts, _, _, N, M):- 
 	length(Dirts, Size), 
 	N * M * 60 / 100 =< Size + N + M.
 
