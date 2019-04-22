@@ -65,36 +65,36 @@ class Simulator:
 			self.env[x][y] = 'S'
 
 		x, y = self.random_empty_block()
-		self.env[x][y] = 'R'
+		self.env[x][y] = '#'
 
 
 	def findObjs(self, obj):
 		r = []
 		for i in range(self.N):
 			for j in range(self.M):
-				if self.env[i][j] == obj:
+				if self.env[i][j] == obj or ((obj == 'N' or obj == 'C') and self.env[i][j] == '~'):
 					r.append((i,j))
 		if self.oldObj != 'N' and self.oldObj == obj:
-			r.append(self.findObjs('R')[0])
+			r.append(self.findObjs('#')[0])
 		return r
 
 	def move_robot(self, moves):
-		move = moves[0]
-		x, y = self.findObjs('R')[0]
-		if move == "drop":
-			self.oldObj = 'NL'
-			self.robotCarrying = False
-		elif move == 'clean':
-			if self.robotCarrying:
-				raise Exception("Cant clean while carrying a child !!")
-			self.oldObj = ''
-		else:
-			self.env[x][y] = self.oldObj
-			self.oldObj = self.env[x+di[moves[0]]][y+dj[moves[0]]]
-			if self.env[x+di[moves[0]]][y+dj[moves[0]]] == 'N':
-				self.robotCarrying = True
+		for move in moves:
+			x, y = self.findObjs('#')[0]
+			if move == "drop":
+				self.oldObj = '~'
+				self.robotCarrying = False
+			elif move == 'clean':
+				if self.robotCarrying:
+					raise Exception("Cant clean while carrying a child !!")
 				self.oldObj = ''
-			self.env[x+di[moves[0]]][y+dj[moves[0]]] = 'R'
+			else:
+				self.env[x][y] = self.oldObj
+				self.oldObj = self.env[x+di[move]][y+dj[move]]
+				if self.env[x+di[move]][y+dj[move]] == 'N':
+					self.robotCarrying = True
+					self.oldObj = ''
+				self.env[x+di[move]][y+dj[move]] = '#'
 
 
 	def simulate(self, n):
@@ -102,9 +102,10 @@ class Simulator:
 			while True:
 				print("=============================")
 				printEnviroment(a.env)
-				move = str(list(robot.next_move(self.findObjs('R')[0], self))[0]['Move'][0])
-				moves = [move]
+				rt = list(robot.next_move(self.findObjs('#')[0], self))
+				moves = list(map(lambda x:str(x), rt[0]['Moves']))
 				self.move_robot(moves)
+				print(moves)
 				time.sleep(2)
 
 N = 8

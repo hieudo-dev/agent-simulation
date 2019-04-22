@@ -8,6 +8,6 @@ def next_move(pos, simulator):
 	pl = Prolog()
 	pl.consult('robot_agent.pl')
 
-	query = "next_move(({}, {}), {}, {}, {}, {}, {}, {}, {}, Move)".format(x, y, N, M, ("true" if simulator.robotCarrying else "false"), simulator.findObjs('S'), simulator.findObjs('N'), simulator.findObjs('O'), simulator.findObjs('C'))
-	print(query)
+	query = "next_move(({}, {}), {}, {}, {}, {}, {}, {}, {}, Moves)".format(x, y, N, M, ("true" if simulator.robotCarrying else "false"), simulator.findObjs('S'), simulator.findObjs('N'), simulator.findObjs('O'), simulator.findObjs('C'))
+	# print(query)
 	return pl.query(query)
