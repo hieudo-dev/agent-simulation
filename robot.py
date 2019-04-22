@@ -1,6 +1,6 @@
 from pyswip import Prolog
 
-def move(pos, simulator):
+def next_move(pos, simulator):
 	x, y = pos
 	N = simulator.N
 	M = simulator.M

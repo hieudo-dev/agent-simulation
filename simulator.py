@@ -5,10 +5,10 @@ from random import randint
 
 
 di = {
-	'left': -1,
-	'right': 1,
-	'up': 0,
-	'down': 0
+	'left': 0,
+	'right':0,
+	'up': -1,
+	'down': 1
 }
 
 dj = {
@@ -32,6 +32,7 @@ class Simulator:
 	env = []
 	N = -1
 	M = -1
+	oldObj = ''
 	robotCarrying = False
 
 	def random_empty_block(self):
@@ -73,19 +74,40 @@ class Simulator:
 			for j in range(self.M):
 				if self.env[i][j] == obj:
 					r.append((i,j))
+		if self.oldObj != 'N' and self.oldObj == obj:
+			r.append(self.findObjs('R')[0])
 		return r
+
+	def move_robot(self, moves):
+		move = moves[0]
+		x, y = self.findObjs('R')[0]
+		if move == "drop":
+			self.oldObj = 'NL'
+			self.robotCarrying = False
+		elif move == 'clean':
+			if self.robotCarrying:
+				raise Exception("Cant clean while carrying a child !!")
+			self.oldObj = ''
+		else:
+			self.env[x][y] = self.oldObj
+			self.oldObj = self.env[x+di[moves[0]]][y+dj[moves[0]]]
+			if self.env[x+di[moves[0]]][y+dj[moves[0]]] == 'N':
+				self.robotCarrying = True
+				self.oldObj = ''
+			self.env[x+di[moves[0]]][y+dj[moves[0]]] = 'R'
+
 
 	def simulate(self, n):
 		for _ in range(n):
 			while True:
-				s = ""
-				s = list(robot.move(self.findObjs('R')[0], self))[0]['Move'][0]
-				print(str(s))
+				print("=============================")
+				printEnviroment(a.env)
+				move = str(list(robot.next_move(self.findObjs('R')[0], self))[0]['Move'][0])
+				moves = [move]
+				self.move_robot(moves)
 				time.sleep(2)
-			pass
 
 N = 8
 M = 8
 a = Simulator(N, M, 0, 4, 0)
-printEnviroment(a.env)
 a.simulate(1000)
