@@ -1,4 +1,4 @@
-% world(10, 10).
+worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -7,12 +7,6 @@
 
 
 :-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2.
-
-% board(1,1).
-% obst(2,1).
-% child(3, 1, 2).
-
-
 
 % Auxiliar Methods
 % get_random ::= return: A random position of the list L.
@@ -33,11 +27,31 @@ checkMemberWithId((X, Y, Id), B):- member((X, Y, Id), B).
 validPosition((X, Y)):- listBoard(L), listDirt(D), 
                         append(L, D, R), member((X,Y), R), !. 
 
-writeChar((X, Y)):- listBoard(L), member((X, Y), L), write(.), tab(1), !.
-writeChar((X, Y)):- listObst(O), member((X, Y), O), write("O"), tab(1), !.
-writeChar((X, Y)):- listDirt(D), member((X, Y), D), write("D"), tab(1), !.
-writeChar((X, Y)):- listCrib(C), member((X, Y), C), write("C"), tab(1), !.
-writeChar((X, Y, Id)):- listChild(Ch), member((X, Y, Id), Ch), write("Ch"), tab(1), !.
+write_list([X|Xs]) :-  write(X), write_list(Xs).
+write_list([]) :- nl.
+
+free(X, Y):- board(X, Y), not(child(X, Y, _)), not(dirt(X, Y)), not(obst(X, Y)), not(crib(X, Y)), not(robot(X, Y, 1)).
+
+paintPos(X, Y) :- paintSaveChild(X, Y), !.
+paintPos(X, Y) :- paintDirtChild(X, Y), !.
+paintPos(X, Y) :- paintRobot(X, Y), !.
+paintPos(X, Y) :- paintChild(X,Y), !.
+paintPos(X, Y) :- paintObst(X,Y), !.
+paintPos(X, Y) :- paintDirt(X, Y), !.
+paintPos(X, Y) :- paintCrib(X, Y), !.
+paintPos(X, Y) :- paintBoard(X, Y), !.
+
+paintSaveChild(X, Y):- child(X, Y, _), crib(X, Y), write("~"), tab(1).
+paintDirtChild(X, Y):- dirt(X, Y), child(X, Y ,_), write("&"), tab(1).
+paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
+paintCrib(X, Y):- crib(X, Y), write("@"), tab(1).
+paintRobot(X, Y):- robot(X, Y, 1), write("R"), tab(1).
+paintChild(X, Y):- child(X, Y, _), not(dirt(X, Y)), not(crib(X, Y)), write("C"), tab(1).
+paintObst(X, Y):- obst(X, Y), write("O"), tab(1).
+paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
+                    
+% sort_tuples(L, S):- sort(2,  @=<, L,  S).
+
 
 
 
@@ -131,13 +145,19 @@ generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), g
 %    Robot Generation 
 % --------------------------------------------------------------------------------------------------------
 
-generate_robot:- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
                  assert(robot(X, Y, 1)), !.
 
+% Paint Board
+generate_world(X, Y):- initial_grid(X, Y, Y), generate_Crib(4),
+generate_obst(6), generate_dirt(3), generate_child(4), generate_robot().
+paintWorld(I) :- worldSize(X, Y), paintHeader(I), !, render_board(X,Y,1,1).
+paintHeader(I) :- worldSize(X, Y), write("Iteration ",I), write_list(["Tablero Inicial de ",X,"x",Y]).
 
 % Render Board
-render_board(L, 1):- nth1(1, L, Elem), writeChar(Elem), nl, !.
-render_board(L, P):- nth1(P, L, Elem), writeChar(Elem), Ps is P - 1, render_board(L, Ps).
+render_board(X, _, X, _):- nl, !.
+render_board(X, Y, X1, Y):- !, Z is X1 + 1, nl, render_board(X, Y, Z, 1).
+render_board(X, Y, X1, Y1):- paintPos(X1, Y1), Z is Y1 + 1, render_board(X, Y, X1, Z), !.
 
 % Get Elemnts in the N-esima row
 get_boards(N, L):-findall((N, Y), board(N, Y), L).
@@ -147,17 +167,36 @@ get_cribs(N, L):-findall((N, Y), crib(N, Y), L).
 get_childs(N, T, L):-findall((N, Y, T), child(N, Y, T), L).
 get_robot(N, P):-findall((N, Y, 1), robot(N, Y, 1), P).
 
+get_row(N, L):- get_boards(N, B), get_obsts(N, O), 
+                append(B, O, R1), get_dirts(N, D),
+                append(D, R1, R2), get_cribs(N, C),
+                append(C, R2, R3), get_childs(N, _, Ch),
+                append(Ch, R3, R4), get_robot(N, P),
+                append(P, R4, L).
+
+
+
 
 % --------------------------------------------------------------------------------------------------------
 %   Simulation
 %   
-%   move_child(Ch, Id, D) ::= params: Ch:child; Id:child.id; D:direction to move
-%   move_robot(R, D) ::= params: R:robot; D:direction to move
+%   move_child(...) ::= return: Move a Child with id:Id
+%   move_obst(...) ::= return: Handles when a child pushes an obstacule
+%   move_robot(...) ::= params: Handels Robot
 %   
 %   
 %   
 %   
 % --------------------------------------------------------------------------------------------------------
+
+get_top((X, Y), L, T):-.
+get_bot((X, Y), L, B):-.
+get_sides((X, Y), B, F):-.
+get_random_position((X, Y), F, (NX, NY)):-.
+
+get_new_child_position((X, Y), (NX, NY)):-  get_top((X, Y), [], T), get_bot((X, Y), L, B), 
+                                            get_sides((X, Y), B, F), get_random_position((X, Y), F, (NX, NY)).
+
 
 move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), retract(child(Xc, Yc, Id)), 
                                     assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
@@ -168,4 +207,4 @@ move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), retract(chil
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
                               Nx is Xa + Dx, Ny is Ya + Dy,
-                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)). 
+                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).                       
