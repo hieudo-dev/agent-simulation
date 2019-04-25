@@ -81,7 +81,7 @@ class Simulator:
 			for j in range(self.M):
 				if self.env[i][j] == obj or ((obj == 'N' or obj == 'C') and self.env[i][j] == '~'):
 					r.append((i,j))
-		if self.oldObj != 'N' and self.oldObj == obj:
+		if (self.oldObj != 'N' and self.oldObj == obj) or ((obj == 'N' or obj == 'C') and self.oldObj == '~'):
 			r.append(self.findObjs('#')[0])
 		return r
 
@@ -113,7 +113,7 @@ class Simulator:
 				moves = list(map(lambda x:str(x), rt[0]['Moves']))
 				self.move_robot(moves)
 				print(moves)
-				time.sleep(2)
+				time.sleep(1)
 
 N = 8
 M = 8
