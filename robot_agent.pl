@@ -75,7 +75,17 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [clean]):-
 	member((X, Y), Dirts),
 	!.
 
+%		No more childs left to move: Find dirt to clean
+next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, Move):-
+	Carrying = false,
+	sort(Childs, A),
+	sort(Corrals, B),
+	A == B,
+	bfs([[(X, Y)]], N, M, Obstacles, Dirts, Path),
+	get_direction(Path, Move),
+	!.
 
+	
 % 		Not carrying a child, enviroment is very dirty: Find dirt to clean
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	Carrying = false,
