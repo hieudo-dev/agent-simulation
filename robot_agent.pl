@@ -3,11 +3,19 @@ adjacent(X, Y, X1, Y):- X1 is X+1.
 adjacent(X, Y, X1, Y):- X1 is X-1.
 adjacent(X, Y, X, Y1):- Y1 is Y+1.
 adjacent(X, Y, X, Y1):- Y1 is Y-1.
+adjacent(X, Y, X1, Y1):- X1 is X+1, Y1 is Y+1.
+adjacent(X, Y, X1, Y1):- X1 is X-1, Y1 is Y+1.
+adjacent(X, Y, X1, Y1):- X1 is X+1, Y1 is Y-1.
+adjacent(X, Y, X1, Y1):- X1 is X-1, Y1 is Y-1.
 
 get_direction([(X, Y), (X1, Y) |_], down):-X1 is X+1.
 get_direction([(X, Y), (X1, Y) |_], up):- X1 is X-1.
 get_direction([(X, Y), (X, Y1) |_], left):- Y1 is Y-1.
 get_direction([(X, Y), (X, Y1) |_], right):- Y1 is Y+1.
+get_direction([(X, Y), (X1, Y1) |_], downleft):- X1 is X+1, Y1 is Y-1.
+get_direction([(X, Y), (X1, Y1) |_], downright):- X1 is X+1, Y1 is Y+1.
+get_direction([(X, Y), (X1, Y1) |_], upleft):- X1 is X-1, Y1 is Y-1.
+get_direction([(X, Y), (X1, Y1) |_], upright):- X1 is X-1, Y1 is Y+1.
 
 is_dirt(X, Y, Dirtlist):- member((X, Y), Dirtlist).
 inside_enviroment(X, Y, N, M):-

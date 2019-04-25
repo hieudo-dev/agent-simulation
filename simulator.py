@@ -8,14 +8,22 @@ di = {
 	'left': 0,
 	'right':0,
 	'up': -1,
-	'down': 1
+	'down': 1,
+	'downleft': 1,
+	'downright': 1,
+	'upleft': -1,
+	'upright': -1
 }
 
 dj = {
 	'left': -1,
 	'right': 1,
 	'up': 0,
-	'down': 0
+	'down': 0,
+	'downleft': -1,
+	'downright': 1,
+	'upleft': -1,
+	'upright': 1
 }
 
 def printEnviroment(env):
