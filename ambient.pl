@@ -9,7 +9,7 @@ worldSize(10, 10).
 :-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2.
 
 % Auxiliar Methods
-% get_random ::= return: A random position of the list L.
+% get_random ::= return: C a random position of the list L.
 get_random(L, C):- length(L, N), random_between(1, N, R), nth1(R, L, C).
 
 % adjacent ::= params: P => Reference point to find its adjacent points
@@ -79,8 +79,8 @@ paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
 %            L = [(2,2), (2,1), (1,2), (1,1)].
 % --------------------------------------------------------------------------------------------------------
 
-initial_grid(1, 1, _):- assert(board(1, 1)), !.
-initial_grid(X, 1, M):- XS is X - 1, Y is M, assert(board(X, 1)), initial_grid(XS, Y, M), !.
+initial_grid(0, 0, _):- assert(board(0, 0)), !.
+initial_grid(X, 0, M):- XS is X - 1, Y is M, assert(board(X, 0)), initial_grid(XS, Y, M), !.
 initial_grid(X, Y, M):- YS is Y - 1, assert(board(X, Y)), initial_grid(X, YS, M).
 
 listBoard(B):-findall((X, Y), board(X, Y), B).
@@ -151,12 +151,12 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 % Paint Board
 generate_world(X, Y):- initial_grid(X, Y, Y), generate_Crib(4),
 generate_obst(6), generate_dirt(3), generate_child(4), generate_robot().
-paintWorld(I) :- worldSize(X, Y), paintHeader(I), !, render_board(X,Y,1,1).
-paintHeader(I) :- worldSize(X, Y), write("Iteration ",I), write_list(["Tablero Inicial de ",X,"x",Y]).
+paintWorld() :- worldSize(X, Y), paintHeader(), !, render_board(X,Y,0,0).
+paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
 % Render Board
 render_board(X, _, X, _):- nl, !.
-render_board(X, Y, X1, Y):- !, Z is X1 + 1, nl, render_board(X, Y, Z, 1).
+render_board(X, Y, X1, Y):- !, Z is X1 + 1, nl, render_board(X, Y, Z, 0).
 render_board(X, Y, X1, Y1):- paintPos(X1, Y1), Z is Y1 + 1, render_board(X, Y, X1, Z), !.
 
 % Get Elemnts in the N-esima row
@@ -189,22 +189,126 @@ get_row(N, L):- get_boards(N, B), get_obsts(N, O),
 %   
 % --------------------------------------------------------------------------------------------------------
 
-get_top((X, Y), L, T):-.
-get_bot((X, Y), L, B):-.
-get_sides((X, Y), B, F):-.
-get_random_position((X, Y), F, (NX, NY)):-.
+get_top((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+                        get_TopBot(TX, Y, TYa, TYb, T).
 
-get_new_child_position((X, Y), (NX, NY)):-  get_top((X, Y), [], T), get_bot((X, Y), L, B), 
-                                            get_sides((X, Y), B, F), get_random_position((X, Y), F, (NX, NY)).
+get_bot((X, Y), B):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
+                        get_TopBot(TX, Y, TYa, TYb, B).
 
+get_sides((X, Y), S):- Ly is Y - 1, Ry is Y + 1, 
+                        get_LeftRight(X, Ly, Ry, S).
+
+get_topCount((X, Y), Tp):-TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+                    get_TopBotCount(TX, Y, TYa, TYb, Tp).
+
+get_botCount((X, Y), Bt):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
+                    get_TopBotCount(TX, Y, TYa, TYb, Bt).
+
+get_sidesCount((X, Y), Sd):-Ly is Y - 1, Ry is Y + 1, 
+                    get_LeftRightCount(X, Ly, Ry, Sd).
+
+get_topPop((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+                get_TopBotPop(TX, Y, TYa, TYb, T).
+
+get_botPop((X, Y), B):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
+                get_TopBotPop(TX, Y, TYa, TYb, B).
+
+get_sidesPop((X, Y), S):- Ly is Y - 1, Ry is Y + 1, 
+                get_LeftRightPop(X, Ly, Ry, S).
+
+
+get_LeftRight(X, Ly, Ry, S):-   findall((X, Ly), board(X, Ly), FreeSpaces), 
+                                findall((X, Ly), dirt(X, Ly), DirtSpaces),
+                                findall((X, Ly), obst(X, Ly), ObstSpaces),
+                                findall((X, Ry), board(X,Ry), FreeSpacesa), 
+                                findall((X, Ry), dirt(X, Ry), DirtSpacesa),
+                                findall((X, Ry), obst(X, Ry), ObstSpacesa),
+                                append(FreeSpaces, FreeSpacesa, FS),
+                                append(DirtSpaces, DirtSpacesa, DS),
+                                append(ObstSpaces, ObstSpacesa, OS),
+                                append(FS, DS, R), append(R, OS, S).
+
+
+get_TopBot(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces), 
+                                findall((TX, Y), dirt(TX, Y), DirtSpaces),
+                                findall((TX, Y), obst(TX, Y), ObstSpaces),
+                                findall((TX, TYa), board(TX, TYa), FreeSpacesa), 
+                                findall((TX, TYa), dirt(TX, TYa), DirtSpacesa),
+                                findall((TX, TYa), obst(TX, TYa), ObstSpacesa),
+                                findall((TX, TYb), board(TX, TYb), FreeSpacesb), 
+                                findall((TX, TYb), dirt(TX, TYb), DirtSpacesb),
+                                findall((TX, TYb), obst(TX, TYb), ObstSpacesb),
+                                append(FreeSpaces, FreeSpacesa, Fs),
+                                append(Fs, FreeSpacesb, FS),
+                                append(DirtSpaces, DirtSpacesa, Ds),
+                                append(Ds, DirtSpacesb, DS),
+                                append(ObstSpaces, ObstSpacesa, Os),
+                                append(Os, ObstSpacesb, OS),
+                                append(FS, DS, L),append(OS, L, T).
+
+get_TopBotCount(TX, Y, TYa, TYb, Tp):-  findall((TX, Y), child(TX, Y, _), ChildSpaces), 
+                                        findall((TX, TYa), child(TX, TYa, _), ChildSpacsa),
+                                        findall((TX, TYb), child(TX, TYb, _), Childpacesb),
+                                        append(ChildSpaces, ChildSpacsa, T),
+                                        append(T, Childpacesb, Ts),
+                                        length(Ts, Tp).
+
+get_LeftRightCount(X, Ly, Ry, Sp):-  findall((X, Ly), child(X, Ly, _), ChildSpaces), 
+                                    findall((X, Ry), child(X, Ry, _), ChildSpacsa),
+                                    append(ChildSpaces, ChildSpacsa, S),
+                                    length(S, Sp).
+
+get_TopBotPop(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces),
+                                    findall((TX, Y), child(TX, Y, _), ChildSpaces),
+                                    findall((TX, TYa), board(TX, TYa), FreeSpacesa),
+                                    findall((TX, TYa), child(TX, TYa, _), ChildSpacesa),
+                                    findall((TX, TYb), board(TX, TYb), FreeSpacesb),
+                                    findall((TX, TYb), child(TX, TYb, _), ChildSpacesb),
+                                    append(FreeSpaces, FreeSpacesa, Fs),
+                                    append(Fs, FreeSpacesb, FS),
+                                    append(ChildSpaces, ChildSpacesa, Os),
+                                    append(Os, ChildSpacesb, OS),
+                                    append(FS, OS, T).
+
+get_LeftRightPop(X, Ly, Ry, S):- findall((X, Ly), board(X, Ly), FreeSpaces), 
+                                    findall((X, Ly), child(X, Ly, _), ChildSpaces),
+                                    findall((X, Ry), board(X,Ry), FreeSpacesa),
+                                    findall((X, Ry), child(X, Ry, _), ChildSpacesa),
+                                    append(FreeSpaces, FreeSpacesa, FS),
+                                    append(ChildSpaces, ChildSpacesa, OS),
+                                    append(FS, OS, S).
+
+child_count((X, Y), C):- get_topCount((X, Y), Tp), get_botCount((X, Y), Bt), get_sidesCount((X, Y), Sd), C is Tp + Bt + Sd.
+
+get_random_position((X, Y), (NX, NY)):- get_top((X, Y), T), get_bot((X, Y), B), get_sides((X, Y), S), 
+                                        append(T, B, TB), append(TB, S, Adj), get_random(Adj, Pos), 
+                                        arg(1, Pos, NX), arg(2, Pos, NY).
+
+get_valid_pop_positions((X, Y), L):- get_topPop((X, Y), Tp), get_botPop((X, Y), Bp), get_sidesPop((X, Y), Sp), 
+                                        append(Tp, Bp, R), append(R, Sp, L).
 
 move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), retract(child(Xc, Yc, Id)), 
-                                    assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
+                                        assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
 move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), retract(child(Xc, Yc, Id)),
-                                     assert(board(Xc, Yc)), retract(obst(2,1)), assert(child(NX, NY, Id)).
+                                        assert(board(Xc, Yc)), retract(obst(2,1)), assert(child(NX, NY, Id)).
 
 
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
                               Nx is Xa + Dx, Ny is Ya + Dy,
-                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).                       
+                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
+
+child_pop([]):- nl.
+child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L), 
+                    retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
+child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y), L)), 
+                    assert(dirt(X, Y)), child_pop(Ts).
+
+
+ 
+
+
+
+
+
+%   Simulation                    
