@@ -1,6 +1,7 @@
 import child
 import robot
 import time
+import math
 from random import randint
 
 
@@ -8,14 +9,22 @@ di = {
 	'left': 0,
 	'right':0,
 	'up': -1,
-	'down': 1
+	'down': 1,
+	'downleft': 1,
+	'downright': 1,
+	'upleft': -1,
+	'upright': -1
 }
 
 dj = {
 	'left': -1,
 	'right': 1,
 	'up': 0,
-	'down': 0
+	'down': 0,
+	'downleft': -1,
+	'downright': 1,
+	'upleft': -1,
+	'upright': 1
 }
 
 def printEnviroment(env):
@@ -59,7 +68,7 @@ class Simulator:
 			x, y = self.random_empty_block()
 			self.env[x][y] = 'N'
 
-		for _ in range(4):
+		for _ in range(math.floor(self.N * self.M * (dirtPercent / 100))):
 			x, y = self.random_empty_block()
 			self.env[x][y] = 'S'
 
@@ -73,7 +82,7 @@ class Simulator:
 			for j in range(self.M):
 				if self.env[i][j] == obj or ((obj == 'N' or obj == 'C') and self.env[i][j] == '~'):
 					r.append((i,j))
-		if self.oldObj != 'N' and self.oldObj == obj:
+		if (self.oldObj != 'N' and self.oldObj == obj) or ((obj == 'N' or obj == 'C') and self.oldObj == '~'):
 			r.append(self.findObjs('#')[0])
 		return r
 
@@ -105,9 +114,9 @@ class Simulator:
 				moves = list(map(lambda x:str(x), rt[0]['Moves']))
 				self.move_robot(moves)
 				print(moves)
-				time.sleep(2)
+				time.sleep(1)
 
 N = 8
 M = 8
-a = Simulator(N, M, 0, 4, 0)
+a = Simulator(N, M, 42, 4, 0)
 a.simulate(1000)

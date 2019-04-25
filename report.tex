@@ -15,16 +15,67 @@
 
 \section{Principales Ideas} 
 \begin{itemize}
-	\item
-	\item
-	\item
+	\item La idea principal es programar 2 diferentes modelos de agente 
+	para el robot y mediante las diferentes simulaciones a realizar, destacar
+	los caracter\'isticas m\'as relevantes de cada modelo, as\'i como 
+	sus diferencias entre el comportamiento de estos.
+	\item Tambi\'en se extrae de las simulaciones, una comparaci\'on del 
+	rendimiento de	cada robot en cuanto a sus tiempos de duraci\'on, nivel 
+	de	suciedad y cantidad de veces que tuvieron ex\'ito en el trabajo o fueron
+	despedidos.
+	\item Para realizar las simulaciones, se generan el ambiente y los agentes
+	cumpliendo con las condiciones definidas en la orientaci\'on, y se procede 
+	a simular el comportamiento de los ni\~nos y el del robot utilizando uno de 
+	los modelos de agente programados.	
 \end{itemize}
 
 \section{Modelos de Agentes}
+\begin{itemize}
+	\item \textbf{Modelo \#1}:
+	El modelo de agente sigue una estrategia pro-activa con una ligera
+	reactividad, 
+	su comportamiento se basa en priorizar la ubicaci\'on de los ni\~nos en el 
+	corral por encima de limpiar la suciedad. Cuando la suciedad se
+	ha acumulado demasiado, el robot priorizar\'a entonces la 
+	limpieza.\\
+	En cada turno, el robot busca al ni\~no que m\'as cerca se encuentre 
+	y se mueve hacia su direcci\'on para cargarlo. En el momento que carge
+	a un ni\~no, busca a la casilla de corral desocupada m\'as cercana y 
+	se mueve hacia este. Si en alg\'un momento, la cantidad de suciedad en el
+	ambiente llega a 	niveles muy altos (cercano al 60\%), se pasa a priorizar
+	la limpieza.\\
+	El robot, para disminuir el nivel de suciedad simplemente encuentra la 
+	casilla m\'as cercana que est\'e sucia y se mueve hacia ella para limpiarla.
+	\begin{itemize} \textit{Algunos detalles sobre este modelo:}
+		\item Si el ambiente llega a niveles altos de suciedad y el robot 
+		est\'a cargando a un ni\~no, este lo deja en la misma casilla en que se
+		encuentra para priorizar la limpieza.
+		\item En el proceso de moverse hacia un ni\~no para recogerlo y guardarlo
+		en el corral, si el robot se encuentra encima de una casilla sucia, este 
+		no lo limpiar\'a porque prioriza por encima de todo a los ni\~nos.
+		\item El robot s\'olo limpiar\'a una cierta cantidad de suciedad para que
+		se deje de cumplir que el nivel de suciedad est\'a 'muy alto'. Nunca se 
+		dedica limpiar toda la suciedad, excepto el caso en que todos los ni\~nos
+		ya hayan sido guardados en el corral.
+	\end{itemize}
+	\item \textbf{Modelo \#2}:
+\end{itemize}
 
 \section{Ideas para la implementaci\'on}
-
-
+	\begin{itemize}
+		\item Para programar los modelos de comportamiento del robot se crearon
+		2 programas de \textit{PROLOG}, los cuales contienen hechos y reglas l\'ogicas que
+		definen el comportamiento del robot para cada modelo.
+		\item El una implementaci\'on en \textit{PROLOG} del m\'etodo BFS fue usado para 
+		encontrar determinar caminos de menor longitud entre el robot y la suciedad,
+		los ni\~nos o el corral.
+		\item La representaci\'on del ambiente en cuesti\'on se hace a trav'es de
+		hechos l\'ogicos en vez de lista de listas. Al generar un ambiente se
+		genera din\'amicamente hechos de \textit{PROLOG}: \textit{suciedad(1,2). 
+		obst\'aculo(2,4). ni\~no(5, 3). robot(0,1).}, etc.. Para lograr esto se
+		utiliz\'o los meta-predicados  \textbf{dynamic}, \textbf{assert} y \textbf{retract}
+		que nos ofrece \textit{PROLOG}.
+	\end{itemize}
 \section{Experimentaci\'on}
 
 \end{document}
