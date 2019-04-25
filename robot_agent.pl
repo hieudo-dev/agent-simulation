@@ -80,7 +80,8 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [clean]):-
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, _, [Move]):-
 	Carrying = false,
 	is_very_dirty(Dirts, Childs, Obstacles, N, M),
-	bfs([[(X, Y)]], N, M, Obstacles, Childs, Path),
+	append(Childs, Obstacles, Obstacles1),
+	bfs([[(X, Y)]], N, M, Obstacles1, Dirts, Path),
 	get_direction(Path, Move),
 	!.
 
@@ -89,8 +90,9 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move, drop
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	append(Obstacles, Childs, RobotObstacles),
+	subtract(RobotObstacles, Corrals, Obstacles1),
 	subtract(Corrals, Childs, EmptyCorrals),
-	bfs([[(X, Y)]], N, M, RobotObstacles, EmptyCorrals, [S, T|PathTail]),
+	bfs([[(X, Y)]], N, M, Obstacles1, EmptyCorrals, [S, T|PathTail]),
 	member(T, Corrals),
 	get_direction([S, T|PathTail], Move),
 	!.
@@ -100,8 +102,9 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move1, Mov
 	Carrying = true,
 	not(is_very_dirty(Dirts, Childs, Obstacles, N, M)),
 	append(Obstacles, Childs, RobotObstacles),
+	subtract(RobotObstacles, Corrals, Obstacles1),
 	subtract(Corrals, Childs, EmptyCorrals),
-	bfs([[(X, Y)]], N, M, RobotObstacles, EmptyCorrals, [S, T, R|PathTail]),
+	bfs([[(X, Y)]], N, M, Obstacles1, EmptyCorrals, [S, T, R|PathTail]),
 	get_direction([S, T, R|PathTail], Move1),
 	get_direction([T, R|PathTail], Move2),
 	should_drop(Corrals, R, Drop),

@@ -15,16 +15,40 @@
 
 \section{Principales Ideas} 
 \begin{itemize}
-	\item
-	\item
-	\item
+	\item La idea principal es programar 2 diferentes modelos de agente 
+	para el robot y mediante las diferentes simulaciones a realizar, destacar
+	los caracter\'isticas m\'as relevantes de cada modelo, as\'i como 
+	sus diferencias entre el comportamiento de estos.
+	\item Tambi\'en se extrae de las simulaciones, una comparaci\'on del 
+	rendimiento de	cada robot en cuanto a sus tiempos de duraci\'on, nivel 
+	de	suciedad y cantidad de veces que tuvieron ex\'ito en el trabajo o fueron
+	despedidos.
+	\item Para realizar las simulaciones, se generan los ambientes y los agentes
+	de la manera especificada en la orientaci\'on, y se procede a simular el
+	desarrollo del ambiente.	
 \end{itemize}
 
 \section{Modelos de Agentes}
+\begin{itemize}
+	\item \textbf{Modelo \#1}:
+	El modelo de agente sigue una estrategia puramente reactivo, 
+	su comportamiento se basa en priorizar la ubicaci\'on de los ni\~nos en el 
+	corral por encima de limpiar la suciedad.\\
+	En cada turno, el robot busca al ni\~no que m\'as cerca se encuentre 
+	y se mueve hacia su direcci\'on para cargarlo. En el momento que carge
+	a un ni\~no, busca a la casilla de corral desocupada m\'as cercana y 
+	se mueve hacia este. Si en alg\'un momento, la cantidad de suciedad en el ambiente llega a 
+	niveles muy altos (cercano al 60\%), se pasa a priorizar la limpieza.
+	El robot, para disminuir el nivel de suciedad simplemente encuentra la 
+	casilla m\'as cercana que est\'e sucia y se mueve hacia ella para limpiarla.
+\end{itemize}
 
 \section{Ideas para la implementaci\'on}
-
-
+\begin{itemize}
+	\item Para programar los modelos de comportamiento del robot se crearon
+	2 programas de PROLOG, cada uno para un modelo, los cuales contienen 
+	hechos y reglas l\'ogicas que definen el comportamiento del robot.
+\end{itemize}
 \section{Experimentaci\'on}
 
 \end{document}
