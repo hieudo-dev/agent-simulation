@@ -21,12 +21,6 @@ is_dirt(X, Y, Dirtlist):- member((X, Y), Dirtlist).
 inside_enviroment(X, Y, N, M):-
 	X>=0,X<N, 
 	Y>=0,Y<M.
-
-% temporary almost dirty definition
-is_very_dirty(Dirts, _, _, N, M):- 
-	length(Dirts, Size), 
-	N * M * 60 / 100 =< Size + N + M.
-
 %=====================================================================+
 
 % BFS Helpers Predicates
@@ -58,4 +52,49 @@ bfs(PathsQueue, N, M, Obstacles, GoalsList, Solution):-
 %=====================================================================+
 
 % Robot Agent:
-% next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
+
+should_drop(Corrals, Position, [drop]):-member(Position, Corrals).
+should_drop(Corrals, Position, []):-not(member(Position, Corrals)).
+
+get_moves([S, T|PathTail], EmptyCorrals, [Move, drop]):- 
+	member(T, EmptyCorrals),
+	get_direction([S, T|PathTail], Move).
+get_moves([S, T, R|PathTail], EmptyCorrals, [Move1, Move2| Drop]):- 
+	get_direction([S, T, R|PathTail], Move1),
+	get_direction([T, R|PathTail], Move2),
+	should_drop(EmptyCorrals, R, Drop).
+
+
+% 		Not carrying a child, found dirt: Clean the dirt
+next_move((X, Y), _, _, Carrying, Dirts, _, _, _, [clean]):-
+	Carrying = false,
+	member((X, Y), Dirts),
+	!.
+
+%		No more childs left to move: Find dirt to clean
+next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
+	Carrying = false,
+	sort(Childs, A),
+	sort(Corrals, B),
+	A == B,
+	bfs([[(X, Y)]], N, M, Obstacles, Dirts, Path),
+	get_direction(Path, Move),
+	!.
+
+%		Carrying a child, enviroment isnt very dirty: Move towards closest corral to drop child (1/2 Step)
+next_move((X, Y), N, M, Carrying, _, Childs, Obstacles, Corrals, Moves):-
+	Carrying = true,
+	append(Obstacles, Childs, RobotObstacles),
+	subtract(RobotObstacles, Corrals, Obstacles1),
+	subtract(Corrals, Childs, EmptyCorrals),
+	bfs([[(X, Y)]], N, M, Obstacles1, EmptyCorrals, Path),
+	get_moves(Path, EmptyCorrals, Moves),
+	!.
+
+% 		Not carrying a child, Move towards closest child to carry
+next_move((X, Y), N, M, Carrying, _, Childs, Obstacles, Corrals, [Move]):-
+	Carrying = false,
+	subtract(Childs, Corrals, FreeChilds),
+	bfs([[(X, Y)]], N, M, Obstacles, FreeChilds, Path),
+	get_direction(Path, Move),
+	!.

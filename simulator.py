@@ -1,6 +1,7 @@
 import child
 import robot
 import time
+import math
 from random import randint
 
 
@@ -67,7 +68,7 @@ class Simulator:
 			x, y = self.random_empty_block()
 			self.env[x][y] = 'N'
 
-		for _ in range(4):
+		for _ in range(math.floor(self.N * self.M * (dirtPercent / 100))):
 			x, y = self.random_empty_block()
 			self.env[x][y] = 'S'
 
@@ -117,5 +118,5 @@ class Simulator:
 
 N = 8
 M = 8
-a = Simulator(N, M, 0, 4, 0)
+a = Simulator(N, M, 42, 4, 0)
 a.simulate(1000)

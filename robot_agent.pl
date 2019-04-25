@@ -122,6 +122,7 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, Moves):-
 	bfs([[(X, Y)]], N, M, Obstacles1, EmptyCorrals, Path),
 	get_moves(Path, EmptyCorrals, Moves),
 	!.
+
 % 		Not carrying a child, enviroment isn't very dirty: Move towards closest child to carry
 next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
 	Carrying = false,
