@@ -6,11 +6,19 @@ worldSize(10, 10).
 % timeT(15).
 
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2.
+:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3.
 
 % Auxiliar Methods
 % get_random ::= return: C a random position of the list L.
 get_random(L, C):- length(L, N), random_between(1, N, R), nth1(R, L, C).
+
+get_twoRandoms(N, A, B):-random_between(1, N, A), random_between(1, N, B).
+
+get_sixRandoms(N, A, B, C, D, E, F):-random_between(1, N, A), random_between(1, N, B),
+                                        random_between(1, N, C), random_between(1, N, D),
+                                        random_between(1, N, E), random_between(1, N, F).
+
+
 
 % adjacent ::= params: P => Reference point to find its adjacent points
 %          ::= return: (NX, NY) => Adjacent point of P in 4 directions (up, down, right, left) in that order.  
@@ -149,8 +157,8 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
                  assert(robot(X, Y, 1)), !.
 
 % Paint Board
-generate_world(X, Y):- initial_grid(X, Y, Y), generate_Crib(4),
-generate_obst(6), generate_dirt(3), generate_child(4), generate_robot().
+generate_world(X, Y, Cr, Obs, Dir):- initial_grid(X, Y, Y), generate_Crib(Cr),
+generate_obst(Obs), generate_dirt(Dir), generate_child(Cr), generate_robot().
 paintWorld() :- worldSize(X, Y), paintHeader(), !, render_board(X,Y,0,0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
@@ -287,10 +295,32 @@ get_random_position((X, Y), (NX, NY)):- get_top((X, Y), T), get_bot((X, Y), B), 
 get_valid_pop_positions((X, Y), L):- get_topPop((X, Y), Tp), get_botPop((X, Y), Bp), get_sidesPop((X, Y), Sp), 
                                         append(Tp, Bp, R), append(R, Sp, L).
 
-move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), retract(child(Xc, Yc, Id)), 
+move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), !, 
+                                        get_valid_pop_positions((Xc, Yc), Posib), length(Posib, C),
+                                        child_count((Xc, Yc), ChCnt),
+                                        handle_poping(ChCnt, C, Posib, T), child_pop(T),retract(child(Xc, Yc, Id)), 
                                         assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
-move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), retract(child(Xc, Yc, Id)),
-                                        assert(board(Xc, Yc)), retract(obst(2,1)), assert(child(NX, NY, Id)).
+move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), !, 
+                                        get_valid_pop_positions((Xc, Yc), Posib), length(Posib, C),
+                                        child_count((Xc, Yc), ChCnt),
+                                        handle_poping(ChCnt, C, Posib, T), child_pop(T),
+                                        retract(child(Xc, Yc, Id)),
+                                        assert(board(Xc, Yc)), retract(obst(2,1)), 
+                                        assert(child(NX, NY, Id)).
+
+handle_poping(1, Cnt, L, T):- length(L, Cnt), random_between(1, Cnt, I),
+                            nth1(I, L, Elem), append([Elem], [], T), !.
+handle_poping(2, Cnt, L, T):- length(L, Cnt), get_twoRandoms(Cnt, A, B),
+                            nth1(A, L, Elem), nth1(B, L, Elem2),
+                            append([Elem, Elem2], [], T), !.
+handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), Cnt < 6, T is L, !.
+handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), get_sixRandoms(Cnt, A, B, C, D, E, F),
+                            nth1(A, L, Elem), nth1(B, L, Elem2), nth1(C, L, Elem3), 
+                            nth1(D, L, Elem4), nth1(E, L, Elem5), nth1(F, L, Elem6),
+                            append([Elem, Elem2, Elem3, Elem4, Elem5, Elem6], [], T), !.
+
+                            
+
 
 
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
@@ -307,8 +337,21 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y),
 
  
 
+%   Simulation
+
+% create_world(X, Y):- X >= Y, random_between(1, X, Cr), random_between(1, X, Obs), 
+%                         random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+% create_world(X, Y):- X =< Y, random_between(1, Y, Cr), random_between(1, Y, Obs), 
+%                         random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
 
 
+% handler(1):- next_turn(1), !.
+% handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
 
-
-%   Simulation                    
+% next_turn(1):-nl, paintWorld(), !. % Handle Robot Movement.
+% next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch), 
+%                 arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id), 
+%                 get_random_position((X, Y), (Nx, Ny)), move_child(Id, (X, Y), (Nx, Ny)), !, paintWorld().
+ 
+% simulation(1, _):- write("Done Simulation"), paintWorld(), !.
+% simulation(T, N):- handler(N), Ts is T - 1, simulation(Ts, N).
