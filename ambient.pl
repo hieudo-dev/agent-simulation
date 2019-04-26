@@ -1,4 +1,4 @@
-% worldSize(10, 10).
+worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -105,12 +105,10 @@ listChild(Ch):-findall((X, Y, Id), child(X, Y, Id), Ch).
 
 generate_Crib(N):-listBoard(L), generate_crib(N, L), !.
 
-generate_crib(1, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)),
-                         assert(crib(X, Y)), !.
-
-generate_crib(N, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)),
-                         assert(crib(X, Y)), findall(D, adjacent(Pa, D), R), NX is N - 1,
-                         generate_crib(NX, R).
+generate_crib(1, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
+                        assert(crib(X, Y)).
+generate_crib(N, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
+                        assert(crib(X, Y)), Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
 
 % --------------------------------------------------------------------------------------------------------
 %   Obst Generation
@@ -137,18 +135,11 @@ generate_dirt(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y)
 % --------------------------------------------------------------------------------------------------------
 
 generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), !,
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), R), !,
                     assert(child(X, Y, 2)), !.
 
-generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), !, assert(child(X, Y, 2)), !.
-
 generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), not(member((X, Y), Ch)), !,
-                    Id is N + 1, assert(child(X, Y, Id)), NS is N - 1, generate_child(NS).
-
-generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), not(member((X, Y), Ch)), !,
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), R), not(member((X, Y), Ch)), !,
                     Id is N + 1, assert(child(X, Y, Id)), NS is N - 1, generate_child(NS).
 
 % --------------------------------------------------------------------------------------------------------
@@ -160,11 +151,11 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 
 % Paint Board
 generate_world(X, Y, Cr, Obs, Dir):-
-   initial_grid(X, Y, Y),
-   generate_Crib(Cr),
-   generate_obst(Obs),
-   generate_dirt(Dir),
-   generate_child(Cr),
+   initial_grid(X, Y, Y), write("Initial Grid"), nl,
+   generate_Crib(Cr), write("Initial Crib"), nl,
+   generate_obst(Obs), write("Initial Obst"), nl,
+   generate_dirt(Dir), write("Initial Dir"), nl,
+   generate_child(Cr), write("Initial Cr"), nl,
    generate_robot().
 paintWorld() :- worldSize(X, Y), paintHeader(), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
@@ -189,6 +180,20 @@ get_row(N, L):- get_boards(N, B), get_obsts(N, O),
                 append(Ch, R3, R4), get_robot(N, P),
                 append(P, R4, L).
 
+%  Gets (X-1, Y) & (X+1, Y).
+get_topbot((_, Y), Xtop, Xbot, L):- findall((Xtop, Y), board(Xtop, Y), Ts),
+                                    findall((Xbot, Y), board(Xbot, Y), Bs),
+                                    append(Ts, Bs, L).
+%  Gets (X, Y - 1) & (X, Y + 1).
+get_sides((X, _), Yleft, Yright, L):- findall((X, Yleft), board(X, Yleft), Ls),
+                                       findall((X, Yright), board(X, Yright), Rs),
+                                       append(Ls, Rs, L).
+%  Get adjacent in four directions of (X, Y)           
+get_crib_adj((X, Y), Adj):- Xtop is X - 1, Xbot is X + 1,
+                              Yleft is Y - 1, Yright is Y + 1,
+                              get_topbot((X, Y), Xtop, Xbot, Tb),
+                              get_sides((X, Y), Yleft, Yright, Sb),
+                              append(Tb, Sb, Adj).
 
 
 
