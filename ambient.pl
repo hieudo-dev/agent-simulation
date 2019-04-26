@@ -333,7 +333,7 @@ move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(X
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
                               Nx is Xa + Dx, Ny is Ya + Dy,
                               listObst(L), member((Nx, Ny), L), move_obst((Xa, Ya), (Nx, Ny)).
-move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
+move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
                                 Nx is Xa + Dx, Ny is Ya + Dy,
                                 listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
 child_pop([]):- nl.
@@ -341,7 +341,7 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L),
                     retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
 child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y), L)),
                     assert(dirt(X, Y)), child_pop(Ts).
- 
+
 
 
 %====================================================================================
@@ -352,20 +352,36 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount).
+   generate_world(N, M, 4, 4, 4),
+   X is ChildsCount+1,
+   simulate(500, X).
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
    % simulation(T, N).
 
-handler(1):- next_turn(1), !.
-handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
+turn_handler(0):- !.
+turn_handler(N):-
+   write(N),nl,
+   childs_turn(),
+   %robot_turn(),
 
-next_turn(1):-nl, paintWorld(), !. % Handle Robot Movement.
-next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch),
-                arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id),
-                get_random_position((X, Y), (Nx, Ny)), move_child(Id, (X, Y), (Nx, Ny)), !, paintWorld().
+   paintWorld(),
+   % sleep(1),
+   N1 is N - 1,
+   turn_handler(N1).
 
-simulate(1, _):- write("Done Simulation"), paintWorld(), !.
-simulate(T, N):- handler(N), Ts is T - 1, simulate(Ts, N).
+childs_turn():-
+   findall((Id, X, Y), child(X, Y, Id), List),
+   sort(List, SortedChilds),
+   maplist(child_turn, SortedChilds).
+
+child_turn(Child):-
+   Child = (Id, X, Y),
+   get_random_position((X, Y), (Nx, Ny)),
+   move_child(Id, (X, Y), (Nx, Ny)).
+
+
+simulate(1, _):- write("Done Simulation"), !.
+simulate(T, N):- turn_handler(N), Ts is T - 1, simulate(Ts, N).
 
 %      simulator(8, 8, 0, 0, 0, 0).
