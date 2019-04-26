@@ -365,7 +365,7 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 21, 5, 1),
+   generate_world(N, M, 1, 5, 1),
    write("Generated World !"),nl,
    X is ChildsCount+1,
    paintWorld(),
@@ -382,7 +382,7 @@ turn_handler():-
    write("childturn****"), nl,
    childs_turn(),
    write("robotturn++++"), nl,
-   % robot_turn(),
+   robot_turn(),
    %checkear si se ha llegado al 60% de suciedad y terminar
    paintWorld().
 sleep(1).
@@ -396,7 +396,7 @@ robot_turn():-
 
 %  Child Turn
 childs_turn():-
-   findall((Id, X, Y), child(X, Y, Id), List),
+   findall((Id, X, Y), (child(X, Y, Id), not(crib(X, Y))), List),
    sort(List, SortedChilds),
    maplist(child_turn, SortedChilds).
 
