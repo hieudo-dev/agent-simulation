@@ -305,7 +305,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), !,
                                         child_count((Xc, Yc), ChCnt),
                                         handle_poping(ChCnt, C, Posib, T), child_pop(T),
                                         retract(child(Xc, Yc, Id)),
-                                        assert(board(Xc, Yc)), retract(obst(2,1)), 
+                                        assert(board(Xc, Yc)), retract(obst(NX,NY)), 
                                         assert(child(NX, NY, Id)).
 
 handle_poping(1, Cnt, L, T):- length(L, Cnt), random_between(1, Cnt, I),
