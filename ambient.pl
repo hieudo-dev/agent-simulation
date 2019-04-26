@@ -1,4 +1,4 @@
-worldSize(10, 10).
+% worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -6,7 +6,7 @@ worldSize(10, 10).
 % timeT(15).
 
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3.
+:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3, worldSize/2.
 
 % Auxiliar Methods
 % get_random ::= return: C a random position of the list L.
@@ -347,12 +347,13 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y),
 %====================================================================================
 
 simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
+   assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
    generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount).
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
-   %simulation(T, N).
+   % simulation(T, N).
 
 handler(1):- next_turn(1), !.
 handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
@@ -364,3 +365,5 @@ next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch),
 
 simulate(1, _):- write("Done Simulation"), paintWorld(), !.
 simulate(T, N):- handler(N), Ts is T - 1, simulate(Ts, N).
+
+%      simulator(8, 8, 0, 0, 0, 0).
