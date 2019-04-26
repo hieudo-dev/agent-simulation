@@ -1,4 +1,4 @@
-worldSize(10, 10).
+% worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -6,7 +6,7 @@ worldSize(10, 10).
 % timeT(15).
 
 
-:-consult(robot_agent).
+:-consult(robot_agent_2).
 
 :-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, savechild/3, worldSize/2.
 
@@ -365,7 +365,7 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 1, 5, 1),
+   generate_world(N, M, 3, 4, 3),
    write("Generated World !"),nl,
    X is ChildsCount+1,
    paintWorld(),
