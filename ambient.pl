@@ -45,6 +45,7 @@ free(X, Y):- board(X, Y), not(child(X, Y, _)), not(dirt(X, Y)), not(obst(X, Y)),
 paintPos(X, Y) :- paintSaveChild(X, Y), !.
 paintPos(X, Y) :- paintDirtChild(X, Y), !.
 paintPos(X, Y) :- paintRobot(X, Y), !.
+paintPos(X, Y) :- paintRobotInCrib(X, Y), !.
 paintPos(X, Y) :- paintChild(X,Y), !.
 paintPos(X, Y) :- paintObst(X,Y), !.
 paintPos(X, Y) :- paintDirt(X, Y), !.
@@ -55,7 +56,8 @@ paintSaveChild(X, Y):- child(X, Y, _), crib(X, Y), write("~"), tab(1).
 paintDirtChild(X, Y):- dirt(X, Y), child(X, Y ,_), write("&"), tab(1).
 paintChild(X, Y):- child(X, Y, _), not(dirt(X, Y)), not(crib(X, Y)), write("C"), tab(1).
 paintCrib(X, Y):- crib(X, Y), write("@"), tab(1).
-paintRobot(X, Y):- robot(X, Y, 1), write("R"), tab(1).
+paintRobot(X, Y):- robot(X, Y, 1), not(crib(X, Y)),write("R"), tab(1).
+paintRobotInCrib(X, Y):- robot(X, Y, 1), crib(X, Y), write("RC"), tab(1).
 paintObst(X, Y):- obst(X, Y), write("O"), tab(1).
 paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
 paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
