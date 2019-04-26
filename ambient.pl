@@ -332,8 +332,10 @@ handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), get_sixRandoms(Cnt, A, B, 
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
                               Nx is Xa + Dx, Ny is Ya + Dy,
-                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
-
+                              listObst(L), member((Nx, Ny), L), move_obst((Xa, Ya), (Nx, Ny)).
+move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
+                                Nx is Xa + Dx, Ny is Ya + Dy,
+                                listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
 child_pop([]):- nl.
 child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L),
                     retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
