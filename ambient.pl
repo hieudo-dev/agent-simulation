@@ -1,4 +1,4 @@
-worldSize(10, 10).
+% worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -6,7 +6,8 @@ worldSize(10, 10).
 % timeT(15).
 
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3.
+:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3, worldSize/2.
+
 
 % Auxiliar Methods
 % get_random ::= return: C a random position of the list L.
@@ -327,8 +328,10 @@ handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), get_sixRandoms(Cnt, A, B, 
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
                               Nx is Xa + Dx, Ny is Ya + Dy,
-                              listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
-
+                              listObst(L), member((Nx, Ny), L), move_obst((Xa, Ya), (Nx, Ny)).
+move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
+                                Nx is Xa + Dx, Ny is Ya + Dy,
+                                listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
 child_pop([]):- nl.
 child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L), 
                     retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
@@ -338,15 +341,15 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y),
 
 %   Simulation
 
-sudo_create_world(X, Y, Cr, Obs, Dirt):- X >= Y, generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
-sudo_create_world(X, Y, Cr, Obs, Dirt):- X =< Y, generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
+sudo_create_world(X, Y, Cr, Obs, Dirt):- X >= Y, assert(worldSize(X, Y)), generate_world(X, Y, Cr, Obs, Dirt), !.
+sudo_create_world(X, Y, Cr, Obs, Dirt):- X =< Y, assert(worldSize(X, Y)), generate_world(X, Y, Cr, Obs, Dirt), !.
 
 
 
-create_world(X, Y):- X >= Y, random_between(1, X, Cr), random_between(1, X, Obs), 
-                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
-create_world(X, Y):- X =< Y, random_between(1, Y, Cr), random_between(1, Y, Obs), 
-                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
+create_world(X, Y):- X >= Y, assert(worldSize(X, Y)),random_between(1, X, Cr), random_between(1, X, Obs), 
+                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+create_world(X, Y):- X =< Y, assert(worldSize(X, Y)),random_between(1, Y, Cr), random_between(1, Y, Obs), 
+                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
 
 
 handler(1):- next_turn(1), !.
