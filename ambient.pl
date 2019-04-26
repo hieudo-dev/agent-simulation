@@ -99,12 +99,6 @@ listCrib(C):-findall((X,Y), crib(X,Y), C).
 listObst(O):-findall((X,Y), obst(X,Y), O).
 listChild(Ch):-findall((X, Y, Id), child(X, Y, Id), Ch).
 
-isDirt(X):-listDirt(L), member(X, L).
-isBoard(X):-listBoard(L), member(X, L).
-isCrib(X):-listCrib(L), member(X, L).
-isObst(X):-listObst(L), member(X, L).
-isChild(X):-listChild(L), member(X, L).
-
 % --------------------------------------------------------------------------------------------------------
 %   Crib Generation
 % --------------------------------------------------------------------------------------------------------
@@ -222,7 +216,7 @@ get_random_position((X, Y), (NX, NY)):-
 
 near_childs((X, Y), NearChilds):-
    findall((U, V),
-   (adjacent(X, Y, U, V),listChild(Childs),member((U,V,_), Childs)),
+   (adjacent(X, Y, U, V), child(U, V, _))),
    AdjChilds),
    append(AdjChilds, [(X, Y)], NearChilds).
 
@@ -242,13 +236,13 @@ pooping_time((Xc,Yc)):-
 
 child_poop(0, _).
 child_poop(N, [(X, Y)|Ts]):- 
-   listBoard(L), member((X, Y), L),
+   board(X, Y),
    retract(board(X, Y)), 
    assert(dirt(X, Y)), 
    N1 is N-1,
    child_poop(N1, Ts).
 child_poop(N, [(X, Y)|Ts]):- 
-   ((listChild(C), member((X, Y), C)); robot(X, Y, _)), 
+   (child(X, Y, _); robot(X, Y, _)), 
    assert(dirt(X, Y)), 
    N1 is N-1,
    child_poop(N1, Ts).
@@ -265,16 +259,16 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    assert(child(NX, NY, Id)).
 move_child(Id, (Xc, Yc), (NX, NY)):-
-   isObst((NX, NY)),
-   isBoard((Xc, Yc)),
+   obst(NX, NY),
+   board(Xc, Yc),
    move_obst((Xc, Yc), (NX, NY)), !,
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
    assert(board(NX, NY)).
 move_child(Id, (Xc, Yc), (NX, NY)):-
-   isObst((NX, NY)),
-   isDirt((Xc, Yc)),
+   obst(NX, NY),
+   dirt(Xc, Yc),
    move_obst((Xc, Yc), (NX, NY)), !,
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
@@ -284,17 +278,17 @@ move_child(_,_,_).
 
 
 move_obst((_, _), (Xa, Ya)):- 
-   isBoard((Xa, Ya)),
+   board(Xa, Ya),
    retract(board(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((_, _), (Xa, Ya)):- 
-   isDirt((Xa, Ya)),
+   dirt(Xa, Ya),
    retract(dirt(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- 
    Dx is Xa - X, Dy is Ya - Y,
    Nx is Xa + Dx, Ny is Ya + Dy,
-   isObst((Xa, Ya)), 
+   obst(Xa, Ya), 
    move_obst((Xa, Ya), (Nx, Ny)).
 
 %====================================================================================
@@ -329,8 +323,7 @@ make_move((X, Y), drop):-
 
 make_move((X, Y), Move):-
    get_direction([(X, Y), (U, V)], Move),
-   listObst(Obst), not(member((X, Y), Obst)),
-   listObst(Obst), not(member((X, Y), Obst)),
+   not(obst(X, Y)),
    retract(robot(X, Y)),
    assert(robot(U, V)),
    clean_up((X, Y)).
@@ -343,23 +336,23 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 1, 25, 40),
+   generate_world(N, M, 4, 4, 4),
    write("Generated World !"),nl,
    X is ChildsCount+1,
-   simulate(500, X).
+   !, simulate(500, X).
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
    % simulation(T, N).
 
    simulate(0, _):- !, write("Done Simulation").
-   simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Turno: ", T]),nl, simulate(Ts, N).
+   simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Ronda: ", T]),nl, simulate(Ts, N).
 
 %  Turn Handler
 turn_handler():-
-   childs_turn(),
-   %robot_turn(),
+   % childs_turn(),
+   robot_turn(),
    %checkear si se ha llegado al 60% de suciedad y terminar
-   paintWorld(),
+   paintWorld().
    sleep(1).
 
 
