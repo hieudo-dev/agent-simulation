@@ -1,4 +1,4 @@
-worldSize(10, 10).
+% worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -8,7 +8,7 @@ worldSize(10, 10).
 
 :-consult(robot_agent).
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3, worldSize/2.
+:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, savechild/3, worldSize/2.
 
 % Auxiliar Methods
 % get_random ::= return: C a random position of the list L.
@@ -223,7 +223,7 @@ get_random_position((X, Y), (NX, NY)):-
 
 near_childs((X, Y), NearChilds):-
    findall((U, V),
-   (adjacent(X, Y, U, V), child(U, V, _))),
+   (adjacent(X, Y, U, V), child(U, V, _)),
    AdjChilds),
    append(AdjChilds, [(X, Y)], NearChilds).
 
@@ -262,13 +262,15 @@ child_poop(N, [_|Ts]):-
 %=======================================================================>
 
 move_child(Id, (Xc, Yc), (NX, NY)):-
-   validPosition((NX, NY)), !,
+   validPosition((NX, NY)),
+   not(robot(NX, NY, _)),
+   not(child(NX, NY, _)),
    retract(child(Xc, Yc, Id)),
    assert(child(NX, NY, Id)).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    board(Xc, Yc),
-   move_obst((Xc, Yc), (NX, NY)), !,
+   move_obst((Xc, Yc), (NX, NY)),
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
@@ -276,7 +278,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    dirt(Xc, Yc),
-   move_obst((Xc, Yc), (NX, NY)), !,
+   move_obst((Xc, Yc), (NX, NY)),
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
@@ -302,38 +304,58 @@ move_obst((X, Y), (Xa, Ya)):-
 %     Robot Behaviour
 %====================================================================================
 
-carrying(true):- carrychild(_, _, _).
-carrying(false):- not(carrychild(_, _, _)).
+carrying(true):- carrychild(_).
+carrying(false):- not(carrychild(_)).
 
 
 move_robot((X, Y), N, M):-
    carrying(Carrying),
    listDirt(Dirts),
-   listChild(Childs),
    listObst(Obstacles),
    listCrib(Corrals),
-   next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
+   findall((A, B), child(A, B, _), Childs),
+   write([X, Y, N, M]), nl,
+   write(Carrying), nl,
+   write(Dirts), nl,
+   write(Obstacles), nl,
+   write(Childs), nl,
+   write(Corrals), nl,
+   N1 is N+1, M1 is M+1,
+   write("getting moves"), nl,
+   next_move((X, Y), N1, M1, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
+   write(Moves),nl,
    make_moves((X, Y), Moves).
 
+make_moves(_, []).
 make_moves(Position, [Move|T]):-
    make_move(Position, Move),
-   make_moves(Position, T).
+   robot(X, Y, _),
+   make_moves((X, Y), T).
 
 
 make_move((X, Y), clean):-
    dirt(X, Y),
-   retract(dirt(X, Y)).
+   retract(dirt(X, Y)),
+   assert(board(X, Y)).
 make_move((X, Y), drop):-
-   carrychild(A, B, Id),
-   retract(carrychild(A, B, Id)),
+   carrychild(Id),
+   retract(carrychild(Id)),
    assert(child(X, Y, Id)).
 
 make_move((X, Y), Move):-
    get_direction([(X, Y), (U, V)], Move),
    not(obst(X, Y)),
-   retract(robot(X, Y)),
-   assert(robot(U, V)),
-   clean_up((X, Y)).
+   retract(robot(X, Y, Id)),
+   assert(robot(U, V, Id)),
+   pickup_child((U, V)).
+
+pickup_child((X, Y)):- 
+   child(X, Y, Id),
+   not(carrychild(_)),
+   not(crib(X, Y)),
+   retract(child(X, Y, Id)),
+   assert(carrychild(Id)).
+pickup_child(_).
 
 %====================================================================================
 %      SIMULATION
@@ -343,24 +365,27 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 4, 4, 4),
+   generate_world(N, M, 21, 5, 1),
    write("Generated World !"),nl,
    X is ChildsCount+1,
-   !, simulate(500, X).
+   paintWorld(),
+   simulate(500, X).
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
    % simulation(T, N).
 
    simulate(0, _):- !, write("Done Simulation").
-   simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Ronda: ", T]),nl, simulate(Ts, N).
+   simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Ronda: ", T]),nl, !, simulate(Ts, N).
 
 %  Turn Handler
 turn_handler():-
-   % childs_turn(),
-   robot_turn(),
+   write("childturn****"), nl,
+   childs_turn(),
+   write("robotturn++++"), nl,
+   % robot_turn(),
    %checkear si se ha llegado al 60% de suciedad y terminar
    paintWorld().
-   sleep(1).
+sleep(1).
 
 
 %  Robot Turn
@@ -377,8 +402,16 @@ childs_turn():-
 
 child_turn(Child):-
    Child = (Id, X, Y),
+   write("child_poop****"), nl,
    pooping_time((X, Y)),
    get_random_position((X, Y), (NX, NY)),
+   write("child_move****"), nl,
    move_child(Id, (X, Y), (NX, NY)).
 
-%      simulator(8, 8, 0, 0, 0, 0).
+
+% next_move((5,0),8,8
+false,
+[ (4,8), (6,7), (5,2), (0,2), (0,5), (6,2), (7,7), (0,6), (6,6), (1,5), (8,2), (3,5), (6,1), (7,6), (7,8), (1,6), (1,2), (4,2), (1,7), (4,5)],
+[ (7,1), (4,1), (2,6), (2,8), (0,0)],
+[ (2,3), (0,6), (4,0), (3,1), (7,6), (3,3), (4,0), (3,3), (1,7), (5,0), (8,1), (5,2), (5,2), (0,7), (0,2)],
+[ (8,8), (8,7), (8,6), (8,5), (8,4), (8,3), (7,3), (6,3), (5,3), (4,3), (4,4), (5,4), (6,4), (7,4), (7,5)], Moves).

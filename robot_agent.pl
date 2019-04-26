@@ -131,3 +131,5 @@ next_move((X, Y), N, M, Carrying, Dirts, Childs, Obstacles, Corrals, [Move]):-
 	bfs([[(X, Y)]], N, M, Obstacles, FreeChilds, Path),
 	get_direction(Path, Move),
 	!.
+
+% next_move(_,_,_,_,_,_,_,_,_):-write("Simulacion Terminada"), nl.
