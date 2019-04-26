@@ -1,4 +1,4 @@
-% worldSize(10, 10).
+worldSize(10, 10).
 % dirtPorcent(8).
 % dirtObst(5).
 % dirtChild(3).
@@ -266,7 +266,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    not(robot(NX, NY, _)),
    not(child(NX, NY, _)),
    retract(child(Xc, Yc, Id)),
-   assert(child(NX, NY, Id)).
+   assert(child(NX, NY, Id)), sleep(2).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    board(Xc, Yc),
@@ -274,7 +274,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(board(NX, NY)).
+   assert(board(NX, NY)), sleep(2).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    dirt(Xc, Yc),
@@ -282,7 +282,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(dirt(NX, NY)).
+   assert(dirt(NX, NY)), sleep(2).
 move_child(_,_,_).
 
 
@@ -324,7 +324,7 @@ move_robot((X, Y), N, M):-
    write("getting moves"), nl,
    next_move((X, Y), N1, M1, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
    write(Moves),nl,
-   make_moves((X, Y), Moves).
+   make_moves((X, Y), Moves), sleep(2).
 
 make_moves(_, []).
 make_moves(Position, [Move|T]):-
@@ -365,7 +365,7 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 21, 5, 1),
+   generate_world(N, M, 3, 4, 5),
    write("Generated World !"),nl,
    X is ChildsCount+1,
    paintWorld(),
@@ -379,13 +379,12 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
 
 %  Turn Handler
 turn_handler():-
-   write("childturn****"), nl,
+   % write("childturn****"), nl,
    childs_turn(),
-   write("robotturn++++"), nl,
+   % write("robotturn++++"), nl,
    % robot_turn(),
    %checkear si se ha llegado al 60% de suciedad y terminar
    paintWorld().
-sleep(1).
 
 
 %  Robot Turn
@@ -402,16 +401,16 @@ childs_turn():-
 
 child_turn(Child):-
    Child = (Id, X, Y),
-   write("child_poop****"), nl,
+   % write("child_poop****"), nl,
    pooping_time((X, Y)),
    get_random_position((X, Y), (NX, NY)),
-   write("child_move****"), nl,
+   % write("child_move****"), nl,
    move_child(Id, (X, Y), (NX, NY)).
 
 
 % next_move((5,0),8,8
-false,
-[ (4,8), (6,7), (5,2), (0,2), (0,5), (6,2), (7,7), (0,6), (6,6), (1,5), (8,2), (3,5), (6,1), (7,6), (7,8), (1,6), (1,2), (4,2), (1,7), (4,5)],
-[ (7,1), (4,1), (2,6), (2,8), (0,0)],
-[ (2,3), (0,6), (4,0), (3,1), (7,6), (3,3), (4,0), (3,3), (1,7), (5,0), (8,1), (5,2), (5,2), (0,7), (0,2)],
-[ (8,8), (8,7), (8,6), (8,5), (8,4), (8,3), (7,3), (6,3), (5,3), (4,3), (4,4), (5,4), (6,4), (7,4), (7,5)], Moves).
+% false,
+% [ (4,8), (6,7), (5,2), (0,2), (0,5), (6,2), (7,7), (0,6), (6,6), (1,5), (8,2), (3,5), (6,1), (7,6), (7,8), (1,6), (1,2), (4,2), (1,7), (4,5)],
+% [ (7,1), (4,1), (2,6), (2,8), (0,0)],
+% [ (2,3), (0,6), (4,0), (3,1), (7,6), (3,3), (4,0), (3,3), (1,7), (5,0), (8,1), (5,2), (5,2), (0,7), (0,2)],
+% [ (8,8), (8,7), (8,6), (8,5), (8,4), (8,3), (7,3), (6,3), (5,3), (4,3), (4,4), (5,4), (6,4), (7,4), (7,5)], Moves).
