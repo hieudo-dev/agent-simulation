@@ -51,12 +51,12 @@ paintPos(X, Y) :- paintBoard(X, Y), !.
 
 paintSaveChild(X, Y):- child(X, Y, _), crib(X, Y), write("~"), tab(1).
 paintDirtChild(X, Y):- dirt(X, Y), child(X, Y ,_), write("&"), tab(1).
-paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
+paintChild(X, Y):- child(X, Y, _), not(dirt(X, Y)), not(crib(X, Y)), write("C"), tab(1).
 paintCrib(X, Y):- crib(X, Y), write("@"), tab(1).
 paintRobot(X, Y):- robot(X, Y, 1), write("R"), tab(1).
-paintChild(X, Y):- child(X, Y, _), not(dirt(X, Y)), not(crib(X, Y)), write("C"), tab(1).
 paintObst(X, Y):- obst(X, Y), write("O"), tab(1).
 paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
+paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
                     
 % sort_tuples(L, S):- sort(2,  @=<, L,  S).
 
@@ -159,7 +159,7 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 % Paint Board
 generate_world(X, Y, Cr, Obs, Dir):- initial_grid(X, Y, Y), generate_Crib(Cr),
 generate_obst(Obs), generate_dirt(Dir), generate_child(Cr), generate_robot().
-paintWorld() :- worldSize(X, Y), paintHeader(), !, render_board(X,Y,0,0).
+paintWorld() :- worldSize(X, Y), paintHeader(), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
 % Render Board
@@ -308,6 +308,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), !,
                                         assert(board(Xc, Yc)), retract(obst(NX,NY)), 
                                         assert(child(NX, NY, Id)).
 
+handle_poping(0, _, _, T):- T = [].
 handle_poping(1, Cnt, L, T):- length(L, Cnt), random_between(1, Cnt, I),
                             nth1(I, L, Elem), append([Elem], [], T), !.
 handle_poping(2, Cnt, L, T):- length(L, Cnt), get_twoRandoms(Cnt, A, B),
@@ -339,19 +340,19 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y),
 
 %   Simulation
 
-% create_world(X, Y):- X >= Y, random_between(1, X, Cr), random_between(1, X, Obs), 
-%                         random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
-% create_world(X, Y):- X =< Y, random_between(1, Y, Cr), random_between(1, Y, Obs), 
-%                         random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+create_world(X, Y):- X >= Y, random_between(1, X, Cr), random_between(1, X, Obs), 
+                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+create_world(X, Y):- X =< Y, random_between(1, Y, Cr), random_between(1, Y, Obs), 
+                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
 
 
-% handler(1):- next_turn(1), !.
-% handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
+handler(1):- next_turn(1), !.
+handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
 
-% next_turn(1):-nl, paintWorld(), !. % Handle Robot Movement.
-% next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch), 
-%                 arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id), 
-%                 get_random_position((X, Y), (Nx, Ny)), move_child(Id, (X, Y), (Nx, Ny)), !, paintWorld().
+next_turn(1):-nl, paintWorld(), !. % Handle Robot Movement.
+next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch), 
+                arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id), 
+                get_random_position((X, Y), (Nx, Ny)), move_child(Id, (X, Y), (Nx, Ny)), !, paintWorld().
  
-% simulation(1, _):- write("Done Simulation"), paintWorld(), !.
-% simulation(T, N):- handler(N), Ts is T - 1, simulation(Ts, N).
+simulation(1, _):- write("Done Simulation"), paintWorld(), !.
+simulation(T, N):- handler(N), Ts is T - 1, simulation(Ts, N).
