@@ -99,6 +99,12 @@ listCrib(C):-findall((X,Y), crib(X,Y), C).
 listObst(O):-findall((X,Y), obst(X,Y), O).
 listChild(Ch):-findall((X, Y, Id), child(X, Y, Id), Ch).
 
+isDirt(X):-listDirt(L), member(X, L).
+isBoard(X):-listBoard(L), member(X, L).
+isCrib(X):-listCrib(L), member(X, L).
+isObst(X):-listObst(L), member(X, L).
+isChild(X):-listChild(L), member(X, L).
+
 % --------------------------------------------------------------------------------------------------------
 %   Crib Generation
 % --------------------------------------------------------------------------------------------------------
@@ -137,14 +143,14 @@ generate_dirt(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y)
 % --------------------------------------------------------------------------------------------------------
 
 generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), !, retract(board(X,Y)),
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), !,
                     assert(child(X, Y, 2)), !.
 
 generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
                     arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), !, assert(child(X, Y, 2)), !.
 
 generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), not(member((X, Y), Ch)), !, retract(board(X,Y)),
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), not(member((X, Y), Ch)), !,
                     Id is N + 1, assert(child(X, Y, Id)), NS is N - 1, generate_child(NS).
 
 generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
@@ -155,7 +161,7 @@ generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), g
 %    Robot Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
+generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y),
                  assert(robot(X, Y, 1)), !.
 
 % Paint Board
@@ -242,8 +248,7 @@ child_poop(N, [(X, Y)|Ts]):-
    N1 is N-1,
    child_poop(N1, Ts).
 child_poop(N, [(X, Y)|Ts]):- 
-   listChild(C), member((X, Y), C),
-   robot(X, Y, _), 
+   ((listChild(C), member((X, Y), C)); robot(X, Y, _)), 
    assert(dirt(X, Y)), 
    N1 is N-1,
    child_poop(N1, Ts).
@@ -255,20 +260,20 @@ child_poop(N, [_|Ts]):-
 %        Child Movement
 %=======================================================================>
 
-move_child(Id, (Xc, Yc)):-
-   get_random_position((Xc, Yc), (NX, NY)),
+move_child(Id, (Xc, Yc), (NX, NY)):-
    validPosition((NX, NY)), !,
    retract(child(Xc, Yc, Id)),
-   assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
-move_child(Id, (Xc, Yc)):-
-   get_random_position((Xc, Yc), (NX, NY)),
+   assert(board(Xc, Yc)), 
+   assert(child(NX, NY, Id)).
+move_child(Id, (Xc, Yc), (NX, NY)):-
    listObst(Obstacles),
    member((NX, NY), Obstacles),
    move_obst((Xc, Yc), (NX, NY)), !,
    retract(child(Xc, Yc, Id)),
-   assert(board(Xc, Yc)), retract(obst(NX,NY)),
+   assert(board(Xc, Yc)),
+   retract(obst(NX,NY)),
    assert(child(NX, NY, Id)).
-move_child(_,_).
+move_child(_,_,_).
 
 
 move_obst((_, _), (Xa, Ya)):- 
@@ -319,7 +324,10 @@ turn_handler():-
 
 
 %  Robot Turn
-% robot_turn():-
+robot_turn():-
+   worldSize(N, M),
+   robot(X, Y, _),
+   move_robot((X, Y), N, M).
 
 %  Child Turn
 childs_turn():-
@@ -330,6 +338,7 @@ childs_turn():-
 child_turn(Child):-
    Child = (Id, X, Y),
    pooping_time((X, Y)),
-   move_child(Id, (X, Y)).
+   get_random_position((X, Y), (NX, NY)),
+   move_child(Id, (X, Y), (NX, NY)).
 
 %      simulator(8, 8, 0, 0, 0, 0).
