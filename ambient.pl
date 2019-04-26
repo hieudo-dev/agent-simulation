@@ -6,6 +6,8 @@
 % timeT(15).
 
 
+:-consult(robot_agent).
+
 :-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/3, savechild/3, worldSize/2.
 
 % Auxiliar Methods
@@ -207,15 +209,6 @@ get_row(N, L):- get_boards(N, B), get_obsts(N, O),
 %        Child Pooping
 %=======================================================================>
 
-adjacent(X, Y, X1, Y):- X1 is X+1.
-adjacent(X, Y, X1, Y):- X1 is X-1.
-adjacent(X, Y, X, Y1):- Y1 is Y+1.
-adjacent(X, Y, X, Y1):- Y1 is Y-1.
-adjacent(X, Y, X1, Y1):- X1 is X+1, Y1 is Y+1.
-adjacent(X, Y, X1, Y1):- X1 is X-1, Y1 is Y+1.
-adjacent(X, Y, X1, Y1):- X1 is X+1, Y1 is Y-1.
-adjacent(X, Y, X1, Y1):- X1 is X-1, Y1 is Y-1.
-
 get_random_position((X, Y), (NX, NY)):- 
    findall((U, V), adjacent(X, Y, U, V), Adjacents),
    random_permutation(Adjacents, RandomAdjacents),
@@ -278,15 +271,23 @@ move_child(Id, (Xc, Yc)):-
 move_child(_,_).
 
 
+move_obst((_, _), (Xa, Ya)):- 
+   listBoard(L), member((Xa, Ya), L), 
+   retract(board(Xa, Ya)), 
+   assert(obst(Xa, Ya)), !.
+move_obst((X, Y), (Xa, Ya)):- 
+   Dx is Xa - X, Dy is Ya - Y,
+   Nx is Xa + Dx, Ny is Ya + Dy,
+   listObst(L), member((Nx, Ny), L), 
+   move_obst((Xa, Ya), (Nx, Ny)).
+move_obst(_, _).
 
-move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
-move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
-                              Nx is Xa + Dx, Ny is Ya + Dy,
-                              listObst(L), member((Nx, Ny), L), move_obst((Xa, Ya), (Nx, Ny)).
-move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
+%====================================================================================
+%     Robot Behaviour
+%====================================================================================
 
-                                Nx is Xa + Dx, Ny is Ya + Dy,
-                                listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
+
+
 
 
 %====================================================================================
@@ -308,15 +309,19 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    simulate(0, _):- !, write("Done Simulation").
    simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Turno: ", T]),nl, simulate(Ts, N).
 
-
+%  Turn Handler
 turn_handler():-
    childs_turn(),
    %robot_turn(),
-
+   %checkear si se ha llegado al 60% de suciedad y terminar
    paintWorld().
    sleep(1).
 
 
+%  Robot Turn
+% robot_turn():-
+
+%  Child Turn
 childs_turn():-
    findall((Id, X, Y), child(X, Y, Id), List),
    sort(List, SortedChilds),
