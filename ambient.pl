@@ -266,7 +266,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    not(robot(NX, NY, _)),
    not(child(NX, NY, _)),
    retract(child(Xc, Yc, Id)),
-   assert(child(NX, NY, Id)), sleep(2).
+   assert(child(NX, NY, Id)), sleep(1).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    board(Xc, Yc),
@@ -274,7 +274,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(board(NX, NY)), sleep(2).
+   assert(board(NX, NY)), sleep(1).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    dirt(Xc, Yc),
@@ -282,7 +282,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(dirt(NX, NY)), sleep(2).
+   assert(dirt(NX, NY)), sleep(1).
 move_child(_,_,_).
 
 
@@ -324,7 +324,7 @@ move_robot((X, Y), N, M):-
    write("getting moves"), nl,
    next_move((X, Y), N1, M1, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
    write(Moves),nl,
-   make_moves((X, Y), Moves), sleep(2).
+   make_moves((X, Y), Moves), sleep(1).
 
 make_moves(_, []).
 make_moves(Position, [Move|T]):-
@@ -365,7 +365,7 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 3, 4, 5),
+   generate_world(N, M, 1, 5, 1),
    write("Generated World !"),nl,
    X is ChildsCount+1,
    paintWorld(),
@@ -382,7 +382,7 @@ turn_handler():-
    % write("childturn****"), nl,
    childs_turn(),
    % write("robotturn++++"), nl,
-   % robot_turn(),
+   robot_turn(),
    %checkear si se ha llegado al 60% de suciedad y terminar
    paintWorld().
 
@@ -395,7 +395,7 @@ robot_turn():-
 
 %  Child Turn
 childs_turn():-
-   findall((Id, X, Y), child(X, Y, Id), List),
+   findall((Id, X, Y), (child(X, Y, Id), not(crib(X, Y))), List),
    sort(List, SortedChilds),
    maplist(child_turn, SortedChilds).
 
