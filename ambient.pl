@@ -346,7 +346,7 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y),
 %      SIMULATION
 %====================================================================================
 
-simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):- N >= M,
+simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
    generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount).
