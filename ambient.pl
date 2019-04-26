@@ -101,7 +101,7 @@ listChild(Ch):-findall((X, Y, Id), child(X, Y, Id), Ch).
 %   Crib Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_Crib(N):-listBoard(L), generate_crib(N, L).
+generate_Crib(N):-listBoard(L), generate_crib(N, L), !.
 
 generate_crib(1, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)), 
                          assert(crib(X, Y)), !.
@@ -334,16 +334,19 @@ child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L),
                     retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
 child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y), L)), 
                     assert(dirt(X, Y)), child_pop(Ts).
-
-
  
 
 %   Simulation
 
+sudo_create_world(X, Y, Cr, Obs, Dirt):- X >= Y, generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
+sudo_create_world(X, Y, Cr, Obs, Dirt):- X =< Y, generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
+
+
+
 create_world(X, Y):- X >= Y, random_between(1, X, Cr), random_between(1, X, Obs), 
-                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
 create_world(X, Y):- X =< Y, random_between(1, Y, Cr), random_between(1, Y, Obs), 
-                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
+                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !, N is Cr + 1, simulation(500, N).
 
 
 handler(1):- next_turn(1), !.
