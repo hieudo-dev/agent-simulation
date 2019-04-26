@@ -22,7 +22,7 @@ get_sixRandoms(N, A, B, C, D, E, F):-random_between(1, N, A), random_between(1, 
 
 
 % adjacent ::= params: P => Reference point to find its adjacent points
-%          ::= return: (NX, NY) => Adjacent point of P in 4 directions (up, down, right, left) in that order.  
+%          ::= return: (NX, NY) => Adjacent point of P in 4 directions (up, down, right, left) in that order.
 adjacent(P, (NX, NY)):- arg(1, P, X), arg(2, P, Y), NX is X, NY is Y - 1, board(X, NY).
 adjacent(P, (NX ,NY)):- arg(1, P, X), arg(2, P, Y), NX is X, NY is Y + 1, board(X, NY).
 adjacent(P, (NX, NY)):- arg(1, P, X), arg(2, P, Y), NX is X + 1, NY is Y, board(NX, Y).
@@ -33,8 +33,8 @@ checkMember((X, Y), B):-member((X, Y), B).
 checkMemberWithId((X, Y, Id), B):- member((X, Y, Id), B).
 
 % validPosition(X,Y)
-validPosition((X, Y)):- listBoard(L), listDirt(D), 
-                        append(L, D, R), member((X,Y), R), !. 
+validPosition((X, Y)):- listBoard(L), listDirt(D),
+                        append(L, D, R), member((X,Y), R), !.
 
 write_list([X|Xs]) :-  write(X), write_list(Xs).
 write_list([]) :- nl.
@@ -58,7 +58,7 @@ paintRobot(X, Y):- robot(X, Y, 1), write("R"), tab(1).
 paintObst(X, Y):- obst(X, Y), write("O"), tab(1).
 paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
 paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
-                    
+
 % sort_tuples(L, S):- sort(2,  @=<, L,  S).
 
 
@@ -67,23 +67,23 @@ paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
 
 % --------------------------------------------------------------------------------------------------------
 %   Initial Board
-%  
+%
 %   Create all the facts of board, and add them to the enviorment in execution time.
-%   
+%
 %   Ej: initial_grid(2,2,2).
-%   
+%
 %   lisiting. ::= result:
-%               ... 
+%               ...
 %               board(2,2)
 %               board(2,1)
 %               board(1,2)
 %               board(1,1)
 %               ...
-%   
-%   listBoard(B), listDirt(D), listCrib(C), listObst(O), listChild(Ch) ::= return: 
+%
+%   listBoard(B), listDirt(D), listCrib(C), listObst(O), listChild(Ch) ::= return:
 %                           ::= return: A list with each valid tuple (X,Y) for every type defined in the current environment.
 %   Ej: listBoard(L). # After initial_grid(2,2,2).
-%   
+%
 %   listing. ::= result:
 %            L = [(2,2), (2,1), (1,2), (1,1)].
 % --------------------------------------------------------------------------------------------------------
@@ -104,62 +104,67 @@ listChild(Ch):-findall((X, Y, Id), child(X, Y, Id), Ch).
 
 generate_Crib(N):-listBoard(L), generate_crib(N, L), !.
 
-generate_crib(1, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)), 
+generate_crib(1, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)),
                          assert(crib(X, Y)), !.
 
-generate_crib(N, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)), 
-                         assert(crib(X, Y)), findall(D, adjacent(Pa, D), R), NX is N - 1, 
+generate_crib(N, LAdy):- get_random(LAdy, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X, Y)),
+                         assert(crib(X, Y)), findall(D, adjacent(Pa, D), R), NX is N - 1,
                          generate_crib(NX, R).
 
 % --------------------------------------------------------------------------------------------------------
 %   Obst Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_obst(1):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_obst(1):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
                     assert(obst(X,Y)), !.
 
-generate_obst(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_obst(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
                     assert(obst(X,Y)), NS is N - 1, generate_obst(NS).
 
 % --------------------------------------------------------------------------------------------------------
 %   Dirt Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_dirt(1):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_dirt(1):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
                     assert(dirt(X,Y)), !.
 
-generate_dirt(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_dirt(N):- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
                     assert(dirt(X,Y)), NS is N - 1, generate_dirt(NS).
 
 % --------------------------------------------------------------------------------------------------------
 %   Child Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa), 
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), !, retract(board(X,Y)), 
+generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), !, retract(board(X,Y)),
                     assert(child(X, Y, 2)), !.
 
-generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa), 
+generate_child(1):- listBoard(L), listDirt(D), append(L, D, R), get_random(R, Pa),
                     arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), !, assert(child(X, Y, 2)), !.
 
-generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa), 
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), not(member((X, Y), Ch)), !, retract(board(X,Y)), 
+generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), L), not(member((X, Y), Ch)), !, retract(board(X,Y)),
                     Id is N + 1, assert(child(X, Y, Id)), NS is N - 1, generate_child(NS).
 
-generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa), 
-                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), not(member((X, Y), Ch)), !, 
+generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), get_random(R, Pa),
+                    arg(1, Pa, X), arg(2, Pa, Y), member((X,Y), D), not(member((X, Y), Ch)), !,
                     Id is N + 1, assert(child(X, Y, Id)), NS is N - 1, generate_child(NS).
 
 % --------------------------------------------------------------------------------------------------------
-%    Robot Generation 
+%    Robot Generation
 % --------------------------------------------------------------------------------------------------------
 
-generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)), 
+generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y), retract(board(X,Y)),
                  assert(robot(X, Y, 1)), !.
 
 % Paint Board
-generate_world(X, Y, Cr, Obs, Dir):- initial_grid(X, Y, Y), generate_Crib(Cr),
-generate_obst(Obs), generate_dirt(Dir), generate_child(Cr), generate_robot().
+generate_world(X, Y, Cr, Obs, Dir):-
+   initial_grid(X, Y, Y),
+   generate_Crib(Cr),
+   generate_obst(Obs),
+   generate_dirt(Dir),
+   generate_child(Cr),
+   generate_robot().
 paintWorld() :- worldSize(X, Y), paintHeader(), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
@@ -176,7 +181,7 @@ get_cribs(N, L):-findall((N, Y), crib(N, Y), L).
 get_childs(N, T, L):-findall((N, Y, T), child(N, Y, T), L).
 get_robot(N, P):-findall((N, Y, 1), robot(N, Y, 1), P).
 
-get_row(N, L):- get_boards(N, B), get_obsts(N, O), 
+get_row(N, L):- get_boards(N, B), get_obsts(N, O),
                 append(B, O, R1), get_dirts(N, D),
                 append(D, R1, R2), get_cribs(N, C),
                 append(C, R2, R3), get_childs(N, _, Ch),
@@ -188,48 +193,48 @@ get_row(N, L):- get_boards(N, B), get_obsts(N, O),
 
 % --------------------------------------------------------------------------------------------------------
 %   Simulation
-%   
+%
 %   move_child(...) ::= return: Move a Child with id:Id
 %   move_obst(...) ::= return: Handles when a child pushes an obstacule
 %   move_robot(...) ::= params: Handels Robot
-%   
-%   
-%   
-%   
+%
+%
+%
+%
 % --------------------------------------------------------------------------------------------------------
 
-get_top((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+get_top((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1,
                         get_TopBot(TX, Y, TYa, TYb, T).
 
 get_bot((X, Y), B):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
                         get_TopBot(TX, Y, TYa, TYb, B).
 
-get_sides((X, Y), S):- Ly is Y - 1, Ry is Y + 1, 
+get_sides((X, Y), S):- Ly is Y - 1, Ry is Y + 1,
                         get_LeftRight(X, Ly, Ry, S).
 
-get_topCount((X, Y), Tp):-TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+get_topCount((X, Y), Tp):-TX is X - 1, TYa is Y + 1, TYb is Y - 1,
                     get_TopBotCount(TX, Y, TYa, TYb, Tp).
 
 get_botCount((X, Y), Bt):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
                     get_TopBotCount(TX, Y, TYa, TYb, Bt).
 
-get_sidesCount((X, Y), Sd):-Ly is Y - 1, Ry is Y + 1, 
+get_sidesCount((X, Y), Sd):-Ly is Y - 1, Ry is Y + 1,
                     get_LeftRightCount(X, Ly, Ry, Sd).
 
-get_topPop((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1, 
+get_topPop((X, Y), T):- TX is X - 1, TYa is Y + 1, TYb is Y - 1,
                 get_TopBotPop(TX, Y, TYa, TYb, T).
 
 get_botPop((X, Y), B):- TX is X + 1, TYa is Y + 1, TYb is Y - 1,
                 get_TopBotPop(TX, Y, TYa, TYb, B).
 
-get_sidesPop((X, Y), S):- Ly is Y - 1, Ry is Y + 1, 
+get_sidesPop((X, Y), S):- Ly is Y - 1, Ry is Y + 1,
                 get_LeftRightPop(X, Ly, Ry, S).
 
 
-get_LeftRight(X, Ly, Ry, S):-   findall((X, Ly), board(X, Ly), FreeSpaces), 
+get_LeftRight(X, Ly, Ry, S):-   findall((X, Ly), board(X, Ly), FreeSpaces),
                                 findall((X, Ly), dirt(X, Ly), DirtSpaces),
                                 findall((X, Ly), obst(X, Ly), ObstSpaces),
-                                findall((X, Ry), board(X,Ry), FreeSpacesa), 
+                                findall((X, Ry), board(X,Ry), FreeSpacesa),
                                 findall((X, Ry), dirt(X, Ry), DirtSpacesa),
                                 findall((X, Ry), obst(X, Ry), ObstSpacesa),
                                 append(FreeSpaces, FreeSpacesa, FS),
@@ -238,13 +243,13 @@ get_LeftRight(X, Ly, Ry, S):-   findall((X, Ly), board(X, Ly), FreeSpaces),
                                 append(FS, DS, R), append(R, OS, S).
 
 
-get_TopBot(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces), 
+get_TopBot(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces),
                                 findall((TX, Y), dirt(TX, Y), DirtSpaces),
                                 findall((TX, Y), obst(TX, Y), ObstSpaces),
-                                findall((TX, TYa), board(TX, TYa), FreeSpacesa), 
+                                findall((TX, TYa), board(TX, TYa), FreeSpacesa),
                                 findall((TX, TYa), dirt(TX, TYa), DirtSpacesa),
                                 findall((TX, TYa), obst(TX, TYa), ObstSpacesa),
-                                findall((TX, TYb), board(TX, TYb), FreeSpacesb), 
+                                findall((TX, TYb), board(TX, TYb), FreeSpacesb),
                                 findall((TX, TYb), dirt(TX, TYb), DirtSpacesb),
                                 findall((TX, TYb), obst(TX, TYb), ObstSpacesb),
                                 append(FreeSpaces, FreeSpacesa, Fs),
@@ -255,14 +260,14 @@ get_TopBot(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces),
                                 append(Os, ObstSpacesb, OS),
                                 append(FS, DS, L),append(OS, L, T).
 
-get_TopBotCount(TX, Y, TYa, TYb, Tp):-  findall((TX, Y), child(TX, Y, _), ChildSpaces), 
+get_TopBotCount(TX, Y, TYa, TYb, Tp):-  findall((TX, Y), child(TX, Y, _), ChildSpaces),
                                         findall((TX, TYa), child(TX, TYa, _), ChildSpacsa),
                                         findall((TX, TYb), child(TX, TYb, _), Childpacesb),
                                         append(ChildSpaces, ChildSpacsa, T),
                                         append(T, Childpacesb, Ts),
                                         length(Ts, Tp).
 
-get_LeftRightCount(X, Ly, Ry, Sp):-  findall((X, Ly), child(X, Ly, _), ChildSpaces), 
+get_LeftRightCount(X, Ly, Ry, Sp):-  findall((X, Ly), child(X, Ly, _), ChildSpaces),
                                     findall((X, Ry), child(X, Ry, _), ChildSpacsa),
                                     append(ChildSpaces, ChildSpacsa, S),
                                     length(S, Sp).
@@ -279,7 +284,7 @@ get_TopBotPop(TX, Y, TYa, TYb, T):-findall((TX, Y), board(TX, Y), FreeSpaces),
                                     append(Os, ChildSpacesb, OS),
                                     append(FS, OS, T).
 
-get_LeftRightPop(X, Ly, Ry, S):- findall((X, Ly), board(X, Ly), FreeSpaces), 
+get_LeftRightPop(X, Ly, Ry, S):- findall((X, Ly), board(X, Ly), FreeSpaces),
                                     findall((X, Ly), child(X, Ly, _), ChildSpaces),
                                     findall((X, Ry), board(X,Ry), FreeSpacesa),
                                     findall((X, Ry), child(X, Ry, _), ChildSpacesa),
@@ -289,24 +294,24 @@ get_LeftRightPop(X, Ly, Ry, S):- findall((X, Ly), board(X, Ly), FreeSpaces),
 
 child_count((X, Y), C):- get_topCount((X, Y), Tp), get_botCount((X, Y), Bt), get_sidesCount((X, Y), Sd), C is Tp + Bt + Sd.
 
-get_random_position((X, Y), (NX, NY)):- get_top((X, Y), T), get_bot((X, Y), B), get_sides((X, Y), S), 
-                                        append(T, B, TB), append(TB, S, Adj), get_random(Adj, Pos), 
+get_random_position((X, Y), (NX, NY)):- get_top((X, Y), T), get_bot((X, Y), B), get_sides((X, Y), S),
+                                        append(T, B, TB), append(TB, S, Adj), get_random(Adj, Pos),
                                         arg(1, Pos, NX), arg(2, Pos, NY).
 
-get_valid_pop_positions((X, Y), L):- get_topPop((X, Y), Tp), get_botPop((X, Y), Bp), get_sidesPop((X, Y), Sp), 
+get_valid_pop_positions((X, Y), L):- get_topPop((X, Y), Tp), get_botPop((X, Y), Bp), get_sidesPop((X, Y), Sp),
                                         append(Tp, Bp, R), append(R, Sp, L).
 
-move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), !, 
+move_child(Id, (Xc, Yc), (NX, NY)):- validPosition((NX, NY)), !,
                                         get_valid_pop_positions((Xc, Yc), Posib), length(Posib, C),
                                         child_count((Xc, Yc), ChCnt),
-                                        handle_poping(ChCnt, C, Posib, T), child_pop(T),retract(child(Xc, Yc, Id)), 
+                                        handle_poping(ChCnt, C, Posib, T), child_pop(T),retract(child(Xc, Yc, Id)),
                                         assert(board(Xc, Yc)), assert(child(NX, NY, Id)).
-move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), !, 
+move_child(Id, (Xc, Yc), (NX, NY)):- move_obst((Xc, Yc), (NX, NY)), !,
                                         get_valid_pop_positions((Xc, Yc), Posib), length(Posib, C),
                                         child_count((Xc, Yc), ChCnt),
                                         handle_poping(ChCnt, C, Posib, T), child_pop(T),
                                         retract(child(Xc, Yc, Id)),
-                                        assert(board(Xc, Yc)), retract(obst(NX,NY)), 
+                                        assert(board(Xc, Yc)), retract(obst(NX,NY)),
                                         assert(child(NX, NY, Id)).
 
 handle_poping(0, _, _, T):- T = [].
@@ -317,48 +322,48 @@ handle_poping(2, Cnt, L, T):- length(L, Cnt), get_twoRandoms(Cnt, A, B),
                             append([Elem, Elem2], [], T), !.
 handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), Cnt < 6, T is L, !.
 handle_poping(C, Cnt, L, T):- C >= 3, length(L, Cnt), get_sixRandoms(Cnt, A, B, C, D, E, F),
-                            nth1(A, L, Elem), nth1(B, L, Elem2), nth1(C, L, Elem3), 
+                            nth1(A, L, Elem), nth1(B, L, Elem2), nth1(C, L, Elem3),
                             nth1(D, L, Elem4), nth1(E, L, Elem5), nth1(F, L, Elem6),
                             append([Elem, Elem2, Elem3, Elem4, Elem5, Elem6], [], T), !.
 
-                            
+
 
 
 
 move_obst((_, _), (Xa, Ya)):- listBoard(L), member((Xa, Ya), L), retract(board(Xa, Ya)), assert(obst(Xa, Ya)), !.
-move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
+move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y,
                               Nx is Xa + Dx, Ny is Ya + Dy,
                               listObst(L), member((Nx, Ny), L), move_obst((Xa, Ya), (Nx, Ny)).
 move_obst((X, Y), (Xa, Ya)):- Dx is Xa - X, Dy is Ya - Y, 
                                 Nx is Xa + Dx, Ny is Ya + Dy,
                                 listObst(L), not(member((Nx, Ny), L)), move_obst((Xa, Ya), (Nx, Ny)).
 child_pop([]):- nl.
-child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L), 
+child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), member((X, Y), L),
                     retract(board(X, Y)), assert(dirt(X, Y)), child_pop(Ts).
-child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y), L)), 
+child_pop([T|Ts]):- arg(1, T, X), arg(2, T, Y), listBoard(L), not(member((X, Y), L)),
                     assert(dirt(X, Y)), child_pop(Ts).
  
 
-%   Simulation
 
-sudo_create_world(X, Y, Cr, Obs, Dirt):- X >= Y, assert(worldSize(X, Y)), generate_world(X, Y, Cr, Obs, Dirt), !.
-sudo_create_world(X, Y, Cr, Obs, Dirt):- X =< Y, assert(worldSize(X, Y)), generate_world(X, Y, Cr, Obs, Dirt), !.
+%====================================================================================
+%      SIMULATION
+%====================================================================================
 
-
-
-create_world(X, Y):- X >= Y, assert(worldSize(X, Y)),random_between(1, X, Cr), random_between(1, X, Obs), 
-                        random_between(1, X, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
-create_world(X, Y):- X =< Y, assert(worldSize(X, Y)),random_between(1, Y, Cr), random_between(1, Y, Obs), 
-                        random_between(1, Y, Dirt), generate_world(X, Y, Cr, Obs, Dirt), !.
-
+simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
+   ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
+   DirtCount is round(N * M * (DirtPercent / 100)),
+   generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount).
+   %T is ChangeInterval*100,
+   %N is ChildsCount+1,
+   %simulation(T, N).
 
 handler(1):- next_turn(1), !.
 handler(N):- N >= 0, next_turn(N), N1 is N - 1, handler(N1).
 
 next_turn(1):-nl, paintWorld(), !. % Handle Robot Movement.
-next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch), 
-                arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id), 
+next_turn(N):- findall((X, Y, N), child(X, Y, N), D), nth1(1, D, Ch),
+                arg(1, Ch, X), arg(2, Ch, Ch2), arg(1, Ch2, Y), arg(2, Ch2, Id),
                 get_random_position((X, Y), (Nx, Ny)), move_child(Id, (X, Y), (Nx, Ny)), !, paintWorld().
- 
-simulation(1, _):- write("Done Simulation"), paintWorld(), !.
-simulation(T, N):- handler(N), Ts is T - 1, simulation(Ts, N).
+
+simulate(1, _):- write("Done Simulation"), paintWorld(), !.
+simulate(T, N):- handler(N), Ts is T - 1, simulate(Ts, N).
