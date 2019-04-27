@@ -116,7 +116,10 @@ generate_Crib(N):-listBoard(L), generate_crib(N, L), !.
 generate_crib(1, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
                         assert(crib(X, Y)).
 generate_crib(N, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
-                        assert(crib(X, Y)), Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
+                        assert(crib(X, Y)), 
+                        Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
+generate_crib(N, _):- listCrib(C), get_random(C, Elem),arg(1, Elem, X), arg(2, Elem, Y), 
+                        get_crib_adj((X, Y), L), generate_crib(N, L).
 
 %  Gets (X-1, Y) & (X+1, Y).
 get_topbot((_, Y), Xtop, Xbot, L):- findall((Xtop, Y), board(Xtop, Y), Ts),
@@ -301,7 +304,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    not(robot(NX, NY, _)),
    not(child(NX, NY, _)),
    retract(child(Xc, Yc, Id)),
-   assert(child(NX, NY, Id)).
+   assert(child(NX, NY, Id)), sleep(1).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    board(Xc, Yc),
@@ -309,7 +312,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(board(NX, NY)).
+   assert(board(NX, NY)), sleep(1).
 move_child(Id, (Xc, Yc), (NX, NY)):-
    obst(NX, NY),
    dirt(Xc, Yc),
@@ -317,7 +320,7 @@ move_child(Id, (Xc, Yc), (NX, NY)):-
    retract(child(Xc, Yc, Id)),
    retract(obst(NX,NY)),
    assert(child(NX, NY, Id)),
-   assert(dirt(NX, NY)).
+   assert(dirt(NX, NY)), sleep(1).
 move_child(_,_,_).
 
 
@@ -358,7 +361,7 @@ move_robot((X, Y), N, M):-
    N1 is N+1, M1 is M+1,
    next_move((X, Y), N1, M1, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
    write(Moves),nl,
-   make_moves((X, Y), Moves).
+   make_moves((X, Y), Moves), sleep(1).
 
 make_moves(_, []).
 make_moves(Position, [Move|T]):-
