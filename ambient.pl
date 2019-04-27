@@ -10,7 +10,12 @@
 
 :-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, savechild/3, worldSize/2.
 
-% Auxiliar Methods
+
+%=======================================================================>
+%                       Auxiliar Methods
+%=======================================================================>
+
+
 % get_random ::= return: C a random position of the list L.
 get_random(L, C):- length(L, N), random_between(1, N, R), nth1(R, L, C).
 
@@ -65,8 +70,9 @@ paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
 % sort_tuples(L, S):- sort(2,  @=<, L,  S).
 
 
-
-
+%************************************************************************
+%                    ENVIROMENT GENERATION
+%************************************************************************
 
 % --------------------------------------------------------------------------------------------------------
 %   Initial Board
@@ -112,6 +118,21 @@ generate_crib(1, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(
 generate_crib(N, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
                         assert(crib(X, Y)), Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
 
+%  Gets (X-1, Y) & (X+1, Y).
+get_topbot((_, Y), Xtop, Xbot, L):- findall((Xtop, Y), board(Xtop, Y), Ts),
+                                    findall((Xbot, Y), board(Xbot, Y), Bs),
+                                    append(Ts, Bs, L).
+%  Gets (X, Y - 1) & (X, Y + 1).
+get_sides((X, _), Yleft, Yright, L):- findall((X, Yleft), board(X, Yleft), Ls),
+                                       findall((X, Yright), board(X, Yright), Rs),
+                                       append(Ls, Rs, L).
+%  Get adjacent in four directions of (X, Y)           
+get_crib_adj((X, Y), Adj):- Xtop is X - 1, Xbot is X + 1,
+                              Yleft is Y - 1, Yright is Y + 1,
+                              get_topbot((X, Y), Xtop, Xbot, Tb),
+                              get_sides((X, Y), Yleft, Yright, Sb),
+                              append(Tb, Sb, Adj).
+
 % --------------------------------------------------------------------------------------------------------
 %   Obst Generation
 % --------------------------------------------------------------------------------------------------------
@@ -151,14 +172,52 @@ generate_child(N):- listBoard(L), listDirt(D), listChild(Ch), append(L, D, R), g
 generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y),
                  assert(robot(X, Y, 1)), !.
 
-% Paint Board
+% --------------------------------------------------------------------------------------------------------
+%    Wold Generation
+% --------------------------------------------------------------------------------------------------------
+
 generate_world(X, Y, Cr, Obs, Dir):-
-   initial_grid(X, Y, Y), write("Initial Grid"), nl,
-   generate_Crib(Cr), write("Initial Crib"), nl,
-   generate_obst(Obs), write("Initial Obst"), nl,
-   generate_dirt(Dir), write("Initial Dir"), nl,
-   generate_child(Cr), write("Initial Cr"), nl,
+   initial_grid(X, Y, Y), nl,
+   generate_Crib(Cr), nl,
+   generate_obst(Obs), nl,
+   generate_dirt(Dir), nl,
+   generate_child(Cr), nl,
    generate_robot().
+
+% --------------------------------------------------------------------------------------------------------
+%    Wold Generation
+% --------------------------------------------------------------------------------------------------------
+
+reset_world():-
+   worldSize(N, M),
+   reset_child(),
+   reset_crib(),
+   reset_obst(),
+   reset_dirt(),
+   robot(X, Y, I),
+   retract(robot(X, Y, I)),
+   retract(worldSize(N, M)).
+
+reset_child():-not(child(_,_,_)), !.
+reset_child():-
+   child(X, Y, I), retract(child(X, Y, I)), reset_child().
+
+reset_dirt():-not(dirt(_,_)), !.
+reset_dirt():-
+   dirt(X, Y), retract(dirt(X, Y)), reset_dirt().
+
+reset_obst():-not(obst(_,_)), !.
+reset_obst():-
+   obst(X, Y), retract(obst(X, Y)), reset_obst().
+
+reset_crib():-not(crib(_,_)), !.
+reset_crib():-
+   crib(X, Y), retract(crib(X, Y)), reset_crib().
+
+% --------------------------------------------------------------------------------------------------------
+%    World Printing
+% --------------------------------------------------------------------------------------------------------
+
 paintWorld() :- worldSize(X, Y), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
@@ -167,7 +226,7 @@ render_board(X, _, X, _):- nl, !.
 render_board(X, Y, X1, Y):- !, Z is X1 + 1, nl, render_board(X, Y, Z, 0).
 render_board(X, Y, X1, Y1):- paintPos(X1, Y1), Z is Y1 + 1, render_board(X, Y, X1, Z), !.
 
-% Get Elemnts in the N-esima row
+% Get Elemnts in the N-th row
 get_boards(N, L):-findall((N, Y), board(N, Y), L).
 get_obsts(N, L):-findall((N, Y), obst(N, Y), L).
 get_dirts(N, L):-findall((N, Y), dirt(N, Y), L).
@@ -180,36 +239,12 @@ get_row(N, L):- get_boards(N, B), get_obsts(N, O),
                 append(D, R1, R2), get_cribs(N, C),
                 append(C, R2, R3), get_childs(N, _, Ch),
                 append(Ch, R3, R4), get_robot(N, P),
-                append(P, R4, L).
-
-%  Gets (X-1, Y) & (X+1, Y).
-get_topbot((_, Y), Xtop, Xbot, L):- findall((Xtop, Y), board(Xtop, Y), Ts),
-                                    findall((Xbot, Y), board(Xbot, Y), Bs),
-                                    append(Ts, Bs, L).
-%  Gets (X, Y - 1) & (X, Y + 1).
-get_sides((X, _), Yleft, Yright, L):- findall((X, Yleft), board(X, Yleft), Ls),
-                                       findall((X, Yright), board(X, Yright), Rs),
-                                       append(Ls, Rs, L).
-%  Get adjacent in four directions of (X, Y)           
-get_crib_adj((X, Y), Adj):- Xtop is X - 1, Xbot is X + 1,
-                              Yleft is Y - 1, Yright is Y + 1,
-                              get_topbot((X, Y), Xtop, Xbot, Tb),
-                              get_sides((X, Y), Yleft, Yright, Sb),
-                              append(Tb, Sb, Adj).
+                append(P, R4, L).                
 
 
-
-% --------------------------------------------------------------------------------------------------------
-%   Simulation
-%
-%   move_child(...) ::= return: Move a Child with id:Id
-%   move_obst(...) ::= return: Handles when a child pushes an obstacule
-%   move_robot(...) ::= params: Handels Robot
-%
-%
-%
-%
-% --------------------------------------------------------------------------------------------------------
+%************************************************************************
+%                                SIMULATOR
+%************************************************************************
 
 
 %=======================================================================>
@@ -357,7 +392,7 @@ pickup_child((X, Y)):-
 pickup_child(_).
 
 %====================================================================================
-%      SIMULATION
+%      SIMULATOR
 %====================================================================================
 
 simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
@@ -367,10 +402,12 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount),
    write("Generated World !"),nl,
 
-   simulate(500, _).
+   simulate(500, _),
+   reset_world(),
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
    % simulation(T, N).
+   !.
 
 simulate(0, finished):- write("Simulation Finished"), !.
 simulate(_, finished):-
@@ -432,3 +469,13 @@ child_turn(Child):-
    % Try to move
    get_random_position((X, Y), (NX, NY)),
    move_child(Id, (X, Y), (NX, NY)).
+
+
+
+%=============================================================>
+%  Statistics Extraction
+%=============================================================>
+
+extract_data().
+
+sum(X, Y):- Z is X/Y, write(Z),nl.
