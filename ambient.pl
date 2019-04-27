@@ -110,8 +110,10 @@ generate_Crib(N):-listBoard(L), generate_crib(N, L), !.
 generate_crib(1, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
                         assert(crib(X, Y)).
 generate_crib(N, Adj):- get_random(Adj, C), arg(1, C, X), arg(2, C, Y), retract(board(X, Y)),
-                        assert(crib(X, Y)), Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
-
+                        assert(crib(X, Y)), 
+                        Ns is N - 1, get_crib_adj((X, Y), L),generate_crib(Ns, L).
+generate_crib(N, _):- listCrib(C), get_random(C, Elem),arg(1, Elem, X), arg(2, Elem, Y), 
+                        get_crib_adj((X, Y), L), generate_crib(N, L).
 % --------------------------------------------------------------------------------------------------------
 %   Obst Generation
 % --------------------------------------------------------------------------------------------------------
@@ -158,7 +160,7 @@ generate_world(X, Y, Cr, Obs, Dir):-
    generate_obst(Obs), write("Initial Obst"), nl,
    generate_dirt(Dir), write("Initial Dir"), nl,
    generate_child(Cr), write("Initial Cr"), nl,
-   generate_robot().
+   generate_robot(), !.
 paintWorld() :- worldSize(X, Y), paintHeader(), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
@@ -365,7 +367,7 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 3, 4, 3),
+   generate_world(N, M, 25, 20, 10),
    write("Generated World !"),nl,
    X is ChildsCount+1,
    paintWorld(),
