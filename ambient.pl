@@ -52,12 +52,12 @@ paintPos(X, Y) :- paintDirt(X, Y), !.
 paintPos(X, Y) :- paintCrib(X, Y), !.
 paintPos(X, Y) :- paintBoard(X, Y), !.
 
+paintRobot(X, Y):- robot(X, Y, 1), not(crib(X, Y)),write("R"), tab(1).
+paintRobotInCrib(X, Y):- robot(X, Y, 1), crib(X, Y), write("RC"), tab(1).
 paintSaveChild(X, Y):- child(X, Y, _), crib(X, Y), write("~"), tab(1).
 paintDirtChild(X, Y):- dirt(X, Y), child(X, Y ,_), write("&"), tab(1).
 paintChild(X, Y):- child(X, Y, _), not(dirt(X, Y)), not(crib(X, Y)), write("C"), tab(1).
 paintCrib(X, Y):- crib(X, Y), write("@"), tab(1).
-paintRobot(X, Y):- robot(X, Y, 1), not(crib(X, Y)),write("R"), tab(1).
-paintRobotInCrib(X, Y):- robot(X, Y, 1), crib(X, Y), write("RC"), tab(1).
 paintObst(X, Y):- obst(X, Y), write("O"), tab(1).
 paintDirt(X, Y):- dirt(X, Y), write("#"), tab(1).
 paintBoard(X, Y):- board(X, Y), free(X, Y), write(.), tab(1).
@@ -161,7 +161,7 @@ generate_world(X, Y, Cr, Obs, Dir):-
    generate_dirt(Dir), write("Initial Dir"), nl,
    generate_child(Cr), write("Initial Cr"), nl,
    generate_robot(), !.
-paintWorld() :- worldSize(X, Y), paintHeader(), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
+paintWorld() :- worldSize(X, Y), Xs is X + 1, Ys is Y + 1,render_board(Xs, Ys, 0, 0).
 paintHeader() :- worldSize(X, Y), write_list(["Tablero Inicial de ",X,"x",Y]).
 
 % Render Board
@@ -316,14 +316,13 @@ move_robot((X, Y), N, M):-
    listObst(Obstacles),
    listCrib(Corrals),
    findall((A, B), child(A, B, _), Childs),
-   write([X, Y, N, M]), nl,
-   write(Carrying), nl,
-   write(Dirts), nl,
-   write(Obstacles), nl,
-   write(Childs), nl,
-   write(Corrals), nl,
+   % write([X, Y, N, M]), nl,
+   % write(Carrying), nl,
+   % write(Dirts), nl,
+   % write(Obstacles), nl,
+   % write(Childs), nl,
+   % write(Corrals), nl,
    N1 is N+1, M1 is M+1,
-   write("getting moves"), nl,
    next_move((X, Y), N1, M1, Carrying, Dirts, Childs, Obstacles, Corrals, Moves),
    write(Moves),nl,
    make_moves((X, Y), Moves), sleep(1).
@@ -367,27 +366,50 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, 25, 20, 10),
+   generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount),
    write("Generated World !"),nl,
-   X is ChildsCount+1,
-   paintWorld(),
-   simulate(500, X).
+
+   simulate(500, _).
    %T is ChangeInterval*100,
    %N is ChildsCount+1,
    % simulation(T, N).
 
-   simulate(0, _):- !, write("Done Simulation").
-   simulate(T, N):- turn_handler(), Ts is T - 1, write_list(["Ronda: ", T]),nl, !, simulate(Ts, N).
+simulate(0, finished):- write("Simulation Finished"), !.
+simulate(_, finished):-
+   findall((X, Y), child(X, Y, _), Childs),
+   sort(Childs, Ch),
+   listCrib(Cribs), sort(Cribs, Cr),
+   Cr == Ch,
+   listDirt(Dirts), length(Dirts, Len),
+   Len == 0,
+   write("Robot finished job succesfully !"),
+   !.   
+simulate(_, fired):- 
+   worldSize(X, Y), X1 is X+1, Y1 is Y+1,
+   listDirt(L),
+   length(L, Dirts),
+   round(X1 * Y1 * (60 / 100)) =< Dirts,
+   write("El robot ha sido despedido !"), nl,
+   !.
+simulate(T, Outcome):- 
+   write_list(["Ronda: ", T]),
+   turn_handler(), 
+   Ts is T - 1, 
+   write("================================>"), nl,
+   !, simulate(Ts, Outcome).
 
+%=============================================================>
 %  Turn Handler
+%=============================================================>
+
 turn_handler():-
-   % write("childturn****"), nl,
-   childs_turn(),
-   % write("robotturn++++"), nl,
    robot_turn(),
-   %checkear si se ha llegado al 60% de suciedad y terminar
+   childs_turn(),
    paintWorld().
 
+%=============================================================>
+%  Robot Turn
+%=============================================================>
 
 %  Robot Turn
 robot_turn():-
@@ -395,7 +417,10 @@ robot_turn():-
    robot(X, Y, _),
    move_robot((X, Y), N, M).
 
+%=============================================================>
 %  Child Turn
+%=============================================================>
+
 childs_turn():-
    findall((Id, X, Y), (child(X, Y, Id), not(crib(X, Y))), List),
    sort(List, SortedChilds),
@@ -403,16 +428,8 @@ childs_turn():-
 
 child_turn(Child):-
    Child = (Id, X, Y),
-   % write("child_poop****"), nl,
+   % Create some dirt
    pooping_time((X, Y)),
+   % Try to move
    get_random_position((X, Y), (NX, NY)),
-   % write("child_move****"), nl,
    move_child(Id, (X, Y), (NX, NY)).
-
-
-% next_move((5,0),8,8
-% false,
-% [ (4,8), (6,7), (5,2), (0,2), (0,5), (6,2), (7,7), (0,6), (6,6), (1,5), (8,2), (3,5), (6,1), (7,6), (7,8), (1,6), (1,2), (4,2), (1,7), (4,5)],
-% [ (7,1), (4,1), (2,6), (2,8), (0,0)],
-% [ (2,3), (0,6), (4,0), (3,1), (7,6), (3,3), (4,0), (3,3), (1,7), (5,0), (8,1), (5,2), (5,2), (0,7), (0,2)],
-% [ (8,8), (8,7), (8,6), (8,5), (8,4), (8,3), (7,3), (6,3), (5,3), (4,3), (4,4), (5,4), (6,4), (7,4), (7,5)], Moves).
