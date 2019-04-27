@@ -177,11 +177,11 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 % --------------------------------------------------------------------------------------------------------
 
 generate_world(X, Y, Cr, Obs, Dir):-
-   initial_grid(X, Y, Y), nl,
-   generate_Crib(Cr), nl,
-   generate_obst(Obs), nl,
-   generate_dirt(Dir), nl,
-   generate_child(Cr), nl,
+   initial_grid(X, Y, Y),
+   generate_Crib(Cr),
+   generate_obst(Obs),
+   generate_dirt(Dir),
+   generate_child(Cr),
    generate_robot().
 
 % --------------------------------------------------------------------------------------------------------
@@ -401,13 +401,15 @@ simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
    DirtCount is round(N * M * (DirtPercent / 100)),
    generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount),
    write("Generated World !"),nl,
-
-   simulate(500, _),
-   reset_world(),
-   %T is ChangeInterval*100,
-   %N is ChildsCount+1,
-   % simulation(T, N).
+   interval_wrapper(1, ChangeInterval),
    !.
+
+interval_wrapper(0, _):- !.
+interval_wrapper(N, Interval):-
+   simulate(Interval, _), !,
+   reset_world(),
+   N1 is N-1,
+   interval_wrapper(N1, Interval).
 
 simulate(0, finished):- write("Simulation Finished"), !.
 simulate(_, finished):-
@@ -440,7 +442,7 @@ simulate(T, Outcome):-
 turn_handler():-
    robot_turn(),
    childs_turn(),
-   paintWorld().
+   paintWorld(),
    sleep(1).
 
 %=============================================================>
@@ -470,12 +472,8 @@ child_turn(Child):-
    get_random_position((X, Y), (NX, NY)),
    move_child(Id, (X, Y), (NX, NY)).
 
-
-
 %=============================================================>
 %  Statistics Extraction
 %=============================================================>
 
 extract_data().
-
-sum(X, Y):- Z is X/Y, write(Z),nl.
