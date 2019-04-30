@@ -8,7 +8,18 @@
 
 :-consult(robot_agent_2).
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, worldSize/2, wins/1, losses/1, dirPer/2.
+:-dynamic   dirt/2, 
+            robot/3, 
+            child/3, 
+            obst/2, 
+            crib/2, 
+            board/2, 
+            carrychild/1, 
+            worldSize/2, 
+            wins/1, 
+            losses/1, 
+            dirPer/2,
+            dirMax/1.
 
 
 %=======================================================================>
@@ -178,6 +189,7 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 
 generate_world(X, Y, Cr, Obs, Dir):-
    assert(worldSize(X, Y)),
+   assert(dirMax(0)),
    initial_grid(X, Y, Y),
    generate_Crib(Cr),
    generate_obst(Obs),
@@ -197,6 +209,7 @@ reset_world():-
    retractall(carrychild(_)),
    retractall(robot(_, _, _)),
    retractall(child(_, _, _)),
+   retract(dirMax(_)),
    retract(worldSize(_, _)).
 
 % --------------------------------------------------------------------------------------------------------
@@ -308,14 +321,14 @@ move_child(_,_,_).
 
 move_obst((_, _), (Xa, Ya)):- 
    board(Xa, Ya),
-   not(child(Xa, Ya, _)),
-   not(robot(Xa, Ya, _)),
+   not(child(Xa,Ya,_)),
+   not(robot(Xa,Ya,_)),
    retract(board(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((_, _), (Xa, Ya)):- 
    dirt(Xa, Ya),
-   not(child(Xa, Ya, _)),
-   not(robot(Xa, Ya, _)),
+   not(child(Xa,Ya,_)),
+   not(robot(Xa,Ya,_)),
    retract(dirt(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- 
@@ -413,14 +426,16 @@ simulate(_, finished):-
    listDirt(Dirts), length(Dirts, Len),
    Len == 0,
    write("Robot finished job succesfully !"), nl,
+   recordDirtStat(),
    updateWins(),
-   !.   
+   !.
 simulate(_, fired):- 
    worldSize(X, Y), X1 is X+1, Y1 is Y+1,
    listDirt(L),
    length(L, Dirts),
    round(X1 * Y1 * (60 / 100)) =< Dirts,
    write("El robot ha sido despedido !"), nl,
+   recordDirtStat(),
    updateLosses(),
    !.
 simulate(T, Outcome):- 
@@ -436,6 +451,7 @@ simulate(T, Outcome):-
 
 turn_handler():-
    childs_turn(),
+   updateMax(),
    robot_turn(),
    paintWorld().
    % sleep(1).
@@ -487,13 +503,31 @@ updateWins():- wins(X),
                retract(wins(X)), 
                assert(wins(X1)).
 
-updateLosses():- losses(X), 
-            X1 is X + 1, 
-            retract(losses(X)), 
-            assert(losses(X1)).
+updateLosses():-  losses(X), 
+                  X1 is X + 1, 
+                  retract(losses(X)), 
+                  assert(losses(X1)).
 
+updateMax():-  countDirt(Cnt),
+               dirMax(X),
+               X < Cnt,
+               retract(dirMax(_)),
+               assert(dirMax(Cnt)).
+updateMax().
+
+countDirt(Cnt):-  listDirt(L),
+                  length(L, Cnt).
+
+recordDirtStat():-   dirPer(Mean, N),
+                     dirMax(Cnt),
+                     NewMean is Mean + Cnt,
+                     N1 is N + 1,
+                     retract(dirPer(_, _)),
+                     assert(dirPer(NewMean, N1)).
 
 extract_data():- wins(X), 
-                  losses(Y), 
+                  losses(Y),
+                  dirPer(Mean, N),
+                  write("Dirt Mean: "), tab(1), M is Mean/N, write(M), nl,
                   write("Total Wins: "), tab(1), write(X), nl, 
                   write("Total Losses "), tab(1), write(Y).
