@@ -59,6 +59,19 @@
 		ya hayan sido guardados en el corral.
 	\end{itemize}
 	\item \textbf{Modelo \#2}:
+	El segundo modelo de agente realizado sigue una estrategia similar al anterior, con solo algunas
+	modificaciniones.
+	Este 'toma la iniciativa' y prioriza llevar a los ni\~nos al corral y s\'olo decide limpiar cuando
+	ya todos los ni\~nos hayan sido llevados al corral.\\
+	Esta estrategia deber\'ia tener m\'as probabilidades de \'exito ya que se basa en la observaci\'on siguiente:
+	es muy probable que los ni\~nos generan suciedades todos los turnos, mientras mas limpia sea el ambiente y/o m\'as
+	'cluster' de ni\~nos hayan, mas r\'apido se llenar\'a de suciedad, y adem\'as la limpieza es bastante costosa en 
+	cuanto al tiempo que demora (2 turnos por casilla).\\
+	Por tanto, resulta intuitivo pensar que priorizar los generadores de la suciedad ser\'ia bastante m\'as factible que
+	priorizar la limpieza de la suciedad en s\'i.\\
+	La estrategia seguida por el modelo es bastante pro-activa al no reaccionar a los niveles de suciedad del ambiente 
+	sin embargo, debe tener en cuenta el movimiento de los ni\~nos para encontrar y moverse hacia el ni\~no m\'as cercano,
+	por lo que debe considerarse como un agente h\'ibrido. 
 \end{itemize}
 
 \section{Ideas para la implementaci\'on}
