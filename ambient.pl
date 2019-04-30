@@ -8,7 +8,7 @@
 
 :-consult(robot_agent_2).
 
-:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, savechild/3, worldSize/2.
+:-dynamic dirt/2, robot/3, child/3, obst/2, crib/2, board/2, carrychild/1, worldSize/2.
 
 
 %=======================================================================>
@@ -39,7 +39,7 @@ checkMember((X, Y), B):-member((X, Y), B).
 checkMemberWithId((X, Y, Id), B):- member((X, Y, Id), B).
 
 % validPosition(X,Y)
-validPosition((X, Y)):- listBoard(L), listDirt(D),
+validPosition((X, Y)):- listBoard(L), listDirt(D), obst(X, Y),
                         append(L, D, R), member((X,Y), R), !.
 
 write_list([X|Xs]) :-  write(X), write_list(Xs).
@@ -177,6 +177,7 @@ generate_robot() :- listBoard(L), get_random(L, Pa), arg(1, Pa, X), arg(2, Pa, Y
 % --------------------------------------------------------------------------------------------------------
 
 generate_world(X, Y, Cr, Obs, Dir):-
+   assert(worldSize(X, Y)),
    initial_grid(X, Y, Y),
    generate_Crib(Cr),
    generate_obst(Obs),
@@ -189,30 +190,14 @@ generate_world(X, Y, Cr, Obs, Dir):-
 % --------------------------------------------------------------------------------------------------------
 
 reset_world():-
-   worldSize(N, M),
-   reset_child(),
-   reset_crib(),
-   reset_obst(),
-   reset_dirt(),
-   robot(X, Y, I),
-   retract(robot(X, Y, I)),
-   retract(worldSize(N, M)).
-
-reset_child():-not(child(_,_,_)), !.
-reset_child():-
-   child(X, Y, I), retract(child(X, Y, I)), reset_child().
-
-reset_dirt():-not(dirt(_,_)), !.
-reset_dirt():-
-   dirt(X, Y), retract(dirt(X, Y)), reset_dirt().
-
-reset_obst():-not(obst(_,_)), !.
-reset_obst():-
-   obst(X, Y), retract(obst(X, Y)), reset_obst().
-
-reset_crib():-not(crib(_,_)), !.
-reset_crib():-
-   crib(X, Y), retract(crib(X, Y)), reset_crib().
+   retractall(crib(_, _)),
+   retractall(dirt(_, _)),
+   retractall(board(_, _)),
+   retractall(obst(_, _)),
+   retractall(carrychild(_)),
+   retractall(robot(_, _, _)),
+   retractall(child(_, _, _)),
+   retract(worldSize(_, _)).
 
 % --------------------------------------------------------------------------------------------------------
 %    World Printing
@@ -323,10 +308,14 @@ move_child(_,_,_).
 
 move_obst((_, _), (Xa, Ya)):- 
    board(Xa, Ya),
+   not(child(Xa,Ya,_)),
+   not(robot(Xa,Ya,_)),
    retract(board(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((_, _), (Xa, Ya)):- 
    dirt(Xa, Ya),
+   not(child(Xa,Ya,_)),
+   not(robot(Xa,Ya,_)),
    retract(dirt(Xa, Ya)), 
    assert(obst(Xa, Ya)), !.
 move_obst((X, Y), (Xa, Ya)):- 
@@ -396,22 +385,22 @@ pickup_child(_).
 %====================================================================================
 
 simulator(N, M, ChildsCount, DirtPercent, ObstaclePercent, ChangeInterval):-
-   assert(worldSize(N, M)),
    ObstaclesCount is round(N * M * (ObstaclePercent / 100)),
    DirtCount is round(N * M * (DirtPercent / 100)),
-   generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount),
-   write("Generated World !"),nl,
-   interval_wrapper(1, ChangeInterval),
+   interval_wrapper(10, ChangeInterval, N, M, ChildsCount, ObstaclesCount, DirtCount),
    !.
 
-interval_wrapper(0, _):- !.
-interval_wrapper(N, Interval):-
+interval_wrapper(0, _, _, _, _, _, _):- !.
+interval_wrapper(T, Interval, N, M, ChildsCount, ObstaclesCount, DirtCount):-
+   generate_world(N, M, ChildsCount, ObstaclesCount, DirtCount),
+   write(T), write(" - Generated World !"),nl,
    simulate(Interval, _), !,
+   paintWorld(),
    reset_world(),
-   N1 is N-1,
-   interval_wrapper(N1, Interval).
+   T1 is T-1,
+   interval_wrapper(T1, Interval, N, M, ChildsCount, ObstaclesCount, DirtCount), !.
 
-simulate(0, finished):- write("Simulation Finished"), !.
+simulate(0, finished):- write("Simulation Finished"), nl, !.
 simulate(_, finished):-
    findall((X, Y), child(X, Y, _), Childs),
    sort(Childs, Ch),
@@ -419,7 +408,7 @@ simulate(_, finished):-
    Cr == Ch,
    listDirt(Dirts), length(Dirts, Len),
    Len == 0,
-   write("Robot finished job succesfully !"),
+   write("Robot finished job succesfully !"), nl,
    !.   
 simulate(_, fired):- 
    worldSize(X, Y), X1 is X+1, Y1 is Y+1,
@@ -440,10 +429,10 @@ simulate(T, Outcome):-
 %=============================================================>
 
 turn_handler():-
-   robot_turn(),
    childs_turn(),
-   paintWorld(),
-   sleep(1).
+   robot_turn(),
+   paintWorld().
+   % sleep(1).
 
 %=============================================================>
 %  Robot Turn
